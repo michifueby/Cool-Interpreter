@@ -10,9 +10,11 @@
       <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
       <PackageReference Include="Antlr4BuildTasks" Version="12.10.0" />
     </ItemGroup>
-
+    
     <ItemGroup>
-      <Folder Include="Antlr4\Grammars\" />
+        <Antlr4 Include="./Antlr4/Grammars/Cool.g4">
+            <AntOutDir>Antlr4</AntOutDir>
+        </Antlr4>
     </ItemGroup>
 
 </Project>
