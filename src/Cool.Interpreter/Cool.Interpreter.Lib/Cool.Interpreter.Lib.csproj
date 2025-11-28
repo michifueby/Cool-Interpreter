@@ -16,5 +16,9 @@
             <AntOutDir>Antlr4</AntOutDir>
         </Antlr4>
     </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Language\Analysis\SymbolTable\" />
+    </ItemGroup>
 
 </Project>
