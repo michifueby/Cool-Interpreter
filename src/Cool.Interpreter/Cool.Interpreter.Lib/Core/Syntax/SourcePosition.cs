@@ -12,7 +12,7 @@ namespace Cool.Interpreter.Lib.Core.Syntax;
 /// Represents an exact position in a source file using 1-based line and column numbers.
 /// This is the standard type for pointing at "where something happened" in source code.
 /// </summary>
-public sealed class SourcePosition : IEquatable<SourcePosition>, IComparable<SourcePosition>
+public class SourcePosition : IEquatable<SourcePosition>, IComparable<SourcePosition>
 {
     /// <summary>
     /// Gets the path or name of the source file (e.g., "examples/Hello.cool", "REPL", "&lt;stdin&gt;").

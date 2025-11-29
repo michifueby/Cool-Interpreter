@@ -6,11 +6,12 @@
 // <summary>CoolParserEngine</summary>
 //-----------------------------------------------------------------------
 
+namespace Cool.Interpreter.Lib.Language.Parsing;
+
 using Antlr4.Runtime;
+using Cool.Interpreter.Lib.Core.Syntax.Ast;
 using Cool.Interpreter.Lib.Core.Diagnostics;
 using Cool.Interpreter.Lib.Core.Syntax;
-
-namespace Cool.Interpreter.Lib.Language.Parsing;
 
 /// <summary>
 /// Orchestrates the ANTLR-generated lexer and parser to produce a clean AST.
@@ -59,17 +60,17 @@ public class CoolParserEngine
             {
                 return new ParseResult(
                     syntaxTree: null,
-                    diagnostics: diagnostics.ToReadOnly());
+                    diagnostics: diagnostics.Diagnostics);
             }
 
-            var visitor = new AstBuilderVisitor(diagnostics);
+            var visitor = new AstBuilderVisitor(diagnostics, sourceName);
             var syntaxTree = visitor.Visit(programContext) as ProgramNode;
 
             return new ParseResult(
                 syntaxTree: syntaxTree,
-                diagnostics: diagnostics.ToReadOnly());
+                diagnostics: diagnostics.Diagnostics);
         }
-        catch (Exception ex) when (!ex.IsCriticalException())
+        catch (Exception ex)
         {
             // This should never happen — but if visitor crashes, report it gracefully
             diagnostics.ReportInternal(
@@ -78,7 +79,7 @@ public class CoolParserEngine
 
             return new ParseResult(
                 syntaxTree: null,
-                diagnostics: diagnostics.ToReadOnly());
+                diagnostics: diagnostics.Diagnostics);
         }
     }
 }
