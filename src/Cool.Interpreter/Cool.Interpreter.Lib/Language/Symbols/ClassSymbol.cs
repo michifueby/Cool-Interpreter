@@ -1,3 +1,11 @@
+//-----------------------------------------------------------------------
+// <copyright file="ClassSymbol.cs" company="FH Wiener Neustadt">
+//     Copyright (c) FH Wiener Neustadt. All rights reserved.
+// </copyright>
+// <author>Michael Füby, Armin Zimmerling, Mahmoud Ibrahim</author>
+// <summary>ClassSymbol</summary>
+//-----------------------------------------------------------------------
+
 namespace Cool.Interpreter.Lib.Language.Symbols;
 
 /// <summary>
