@@ -9,6 +9,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Antlr4.Runtime.Standard" Version="4.13.1" />
+        <PackageReference Include="Antlr4BuildTasks" Version="12.11.0" />
         <PackageReference Include="coverlet.collector" Version="6.0.2"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1"/>
         <PackageReference Include="NUnit" Version="4.2.2"/>
@@ -22,6 +24,1336 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Cool.Interpreter.Lib\Cool.Interpreter.Lib.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="TestCases\Algorithm\success\arith.cl" />
+      <None Remove="TestCases\Algorithm\fail\hairyscary.cl" />
+      <None Remove="TestCases\Algorithm\success\assignment-val.cl" />
+      <None Remove="TestCases\Algorithm\success\assignseq.cl" />
+      <None Remove="TestCases\Algorithm\success\atoi_EDITED.cl" />
+      <None Remove="TestCases\Algorithm\success\bigexample.cl" />
+      <None Remove="TestCases\Algorithm\success\book_list.cl" />
+      <None Remove="TestCases\Algorithm\success\bool.cl" />
+      <None Remove="TestCases\Algorithm\success\c.cl" />
+      <None Remove="TestCases\Algorithm\success\cells.cl" />
+      <None Remove="TestCases\Algorithm\success\classonefield_EDITED.cl" />
+      <None Remove="TestCases\Algorithm\success\complex.cl" />
+      <None Remove="TestCases\Algorithm\success\copy-self-dispatch.cl" />
+      <None Remove="TestCases\Algorithm\success\dispatch-override-static.cl" />
+      <None Remove="TestCases\Algorithm\success\example_coolmanual_pag7.cl" />
+      <None Remove="TestCases\Algorithm\success\example_coolmanual_pag9_EDITED.cl" />
+      <None Remove="TestCases\Algorithm\success\good_EDITED.cl" />
+      <None Remove="TestCases\Algorithm\success\graph.cl" />
+      <None Remove="TestCases\Algorithm\success\hello_world.cl" />
+      <None Remove="TestCases\Algorithm\success\init-default.cl" />
+      <None Remove="TestCases\Algorithm\success\init-order-super.cl" />
+      <None Remove="TestCases\Algorithm\success\io.cl" />
+      <None Remove="TestCases\Algorithm\success\lam.cl" />
+      <None Remove="TestCases\Algorithm\success\lam-gc.cl" />
+      <None Remove="TestCases\Algorithm\success\life.cl" />
+      <None Remove="TestCases\Algorithm\success\list.cl" />
+      <None Remove="TestCases\Algorithm\success\multiple-static-dispatch.cl" />
+      <None Remove="TestCases\Algorithm\success\new-st.cl" />
+      <None Remove="TestCases\Algorithm\success\objectequality.cl" />
+      <None Remove="TestCases\Algorithm\success\override.cl" />
+      <None Remove="TestCases\Algorithm\success\override-basic.cl" />
+      <None Remove="TestCases\Algorithm\success\recclass.cl" />
+      <None Remove="TestCases\Algorithm\success\scoping.cl" />
+      <None Remove="TestCases\Algorithm\success\selftypeattribute.cl" />
+      <None Remove="TestCases\Algorithm\success\shadow-attr-case_EDITED.cl" />
+      <None Remove="TestCases\Algorithm\success\sort_list.cl" />
+      <None Remove="TestCases\Algorithm\success\test.cl" />
+      <None Remove="TestCases\Parsing\fail\all_else_true.cl" />
+      <None Remove="TestCases\Parsing\fail\attrcapitalname.cl" />
+      <None Remove="TestCases\Parsing\fail\bad.cl" />
+      <None Remove="TestCases\Parsing\fail\badblock.cl" />
+      <None Remove="TestCases\Parsing\fail\baddispatch1.cl" />
+      <None Remove="TestCases\Parsing\fail\baddispatch2.cl" />
+      <None Remove="TestCases\Parsing\fail\baddispatch3.cl" />
+      <None Remove="TestCases\Parsing\fail\baddispatch4.cl" />
+      <None Remove="TestCases\Parsing\fail\badexprlist.cl" />
+      <None Remove="TestCases\Parsing\fail\badfeaturenames.cl" />
+      <None Remove="TestCases\Parsing\fail\badfeatures.cl" />
+      <None Remove="TestCases\Parsing\fail\casenoexpr.cl" />
+      <None Remove="TestCases\Parsing\fail\classbadinherits.cl" />
+      <None Remove="TestCases\Parsing\fail\classbadname.cl" />
+      <None Remove="TestCases\Parsing\fail\classnoname.cl" />
+      <None Remove="TestCases\Parsing\fail\emptyassign.cl" />
+      <None Remove="TestCases\Parsing\fail\emptymethodbody.cl" />
+      <None Remove="TestCases\Parsing\fail\emptyprogram.cl" />
+      <None Remove="TestCases\Parsing\fail\emptystaticdispatch.cl" />
+      <None Remove="TestCases\Parsing\fail\extrasemicolonblock.cl" />
+      <None Remove="TestCases\Parsing\fail\firstbindingerrored.cl" />
+      <None Remove="TestCases\Parsing\fail\firstclasserrored.cl" />
+      <None Remove="TestCases\Parsing\fail\ifnoelse.cl" />
+      <None Remove="TestCases\Parsing\fail\ifnoelsebranch.cl" />
+      <None Remove="TestCases\Parsing\fail\ifnofi.cl" />
+      <None Remove="TestCases\Parsing\fail\ifnothenbranch.cl" />
+      <None Remove="TestCases\Parsing\fail\isvoidbadtype.cl" />
+      <None Remove="TestCases\Parsing\fail\multipleclasses.cl" />
+      <None Remove="TestCases\Parsing\fail\multiplemethoderrors.cl" />
+      <None Remove="TestCases\Parsing\fail\newbadtype.cl" />
+      <None Remove="TestCases\Parsing\fail\only_one_comment.cl" />
+      <None Remove="TestCases\Parsing\fail\returntypebad.cl" />
+      <None Remove="TestCases\Parsing\fail\secondbindingerrored.cl" />
+      <None Remove="TestCases\Parsing\fail\test.3.cl" />
+      <None Remove="TestCases\Parsing\fail\whilebad.cl" />
+      <None Remove="TestCases\Parsing\fail\whilenoloop.cl" />
+      <None Remove="TestCases\Parsing\success\abort.cl" />
+      <None Remove="TestCases\Parsing\success\addedlet.cl" />
+      <None Remove="TestCases\Parsing\success\arith.cl" />
+      <None Remove="TestCases\Parsing\success\arithprecedence.cl" />
+      <None Remove="TestCases\Parsing\success\assigngetstype.cl" />
+      <None Remove="TestCases\Parsing\success\assignment.cl" />
+      <None Remove="TestCases\Parsing\success\assignment-val.cl" />
+      <None Remove="TestCases\Parsing\success\assignseq.cl" />
+      <None Remove="TestCases\Parsing\success\associativity.cl" />
+      <None Remove="TestCases\Parsing\success\associativity+.cl" />
+      <None Remove="TestCases\Parsing\success\associativity-times.cl" />
+      <None Remove="TestCases\Parsing\success\associativitydiv.cl" />
+      <None Remove="TestCases\Parsing\success\atoi.cl" />
+      <None Remove="TestCases\Parsing\success\atoi_test.cl" />
+      <None Remove="TestCases\Parsing\success\basic-init.cl" />
+      <None Remove="TestCases\Parsing\success\basicequality.cl" />
+      <None Remove="TestCases\Parsing\success\bigexample.cl" />
+      <None Remove="TestCases\Parsing\success\bigexpr.cl" />
+      <None Remove="TestCases\Parsing\success\binary_tree.cl" />
+      <None Remove="TestCases\Parsing\success\book_list.cl" />
+      <None Remove="TestCases\Parsing\success\bool.cl" />
+      <None Remove="TestCases\Parsing\success\c.cl" />
+      <None Remove="TestCases\Parsing\success\calls.cl" />
+      <None Remove="TestCases\Parsing\success\case-none.cl" />
+      <None Remove="TestCases\Parsing\success\case-order.cl" />
+      <None Remove="TestCases\Parsing\success\casemultiplebranch.cl" />
+      <None Remove="TestCases\Parsing\success\casevoid.cl" />
+      <None Remove="TestCases\Parsing\success\cells.cl" />
+      <None Remove="TestCases\Parsing\success\classmethodonearg.cl" />
+      <None Remove="TestCases\Parsing\success\classonefield.cl" />
+      <None Remove="TestCases\Parsing\success\classtwofields.cl" />
+      <None Remove="TestCases\Parsing\success\comparisons-assoc.cl" />
+      <None Remove="TestCases\Parsing\success\complex.cl" />
+      <None Remove="TestCases\Parsing\success\cool.cl" />
+      <None Remove="TestCases\Parsing\success\copy-self-dispatch.cl" />
+      <None Remove="TestCases\Parsing\success\copy-self-init.cl" />
+      <None Remove="TestCases\Parsing\success\dispatch-override-dynamic.cl" />
+      <None Remove="TestCases\Parsing\success\dispatch-override-static.cl" />
+      <None Remove="TestCases\Parsing\success\dispatch-void-dynamic.cl" />
+      <None Remove="TestCases\Parsing\success\dispatch-void-static.cl" />
+      <None Remove="TestCases\Parsing\success\dispatcharglist.cl" />
+      <None Remove="TestCases\Parsing\success\dispatchnoargs.cl" />
+      <None Remove="TestCases\Parsing\success\dispatchonearg.cl" />
+      <None Remove="TestCases\Parsing\success\dispatchvoidlet.cl" />
+      <None Remove="TestCases\Parsing\success\equalsassociativity.cl" />
+      <None Remove="TestCases\Parsing\success\eval-order-args.cl" />
+      <None Remove="TestCases\Parsing\success\eval-order-arith.cl" />
+      <None Remove="TestCases\Parsing\success\eval-order-self.cl" />
+      <None Remove="TestCases\Parsing\success\example_coolmanual_pag5.cl" />
+      <None Remove="TestCases\Parsing\success\example_coolmanual_pag7.cl" />
+      <None Remove="TestCases\Parsing\success\example_coolmanual_pag9.cl" />
+      <None Remove="TestCases\Parsing\success\exp.cl" />
+      <None Remove="TestCases\Parsing\success\fact.cl" />
+      <None Remove="TestCases\Parsing\success\fibo.cl" />
+      <None Remove="TestCases\Parsing\success\formallists.cl" />
+      <None Remove="TestCases\Parsing\success\good.cl" />
+      <None Remove="TestCases\Parsing\success\graph.cl" />
+      <None Remove="TestCases\Parsing\success\hairyscary.cl" />
+      <None Remove="TestCases\Parsing\success\hello_world.cl" />
+      <None Remove="TestCases\Parsing\success\ifexpressionblock.cl" />
+      <None Remove="TestCases\Parsing\success\ifnested.cl" />
+      <None Remove="TestCases\Parsing\success\init-default.cl" />
+      <None Remove="TestCases\Parsing\success\init-order-self.cl" />
+      <None Remove="TestCases\Parsing\success\init-order-super.cl" />
+      <None Remove="TestCases\Parsing\success\interaction-attrinit-method.cl" />
+      <None Remove="TestCases\Parsing\success\io.cl" />
+      <None Remove="TestCases\Parsing\success\lam.cl" />
+      <None Remove="TestCases\Parsing\success\lam-gc.cl" />
+      <None Remove="TestCases\Parsing\success\let-nested.cl" />
+      <None Remove="TestCases\Parsing\success\letassociativity.cl" />
+      <None Remove="TestCases\Parsing\success\letinit.cl" />
+      <None Remove="TestCases\Parsing\success\letinitmultiplebindings.cl" />
+      <None Remove="TestCases\Parsing\success\letnoinit.cl" />
+      <None Remove="TestCases\Parsing\success\letparens.cl" />
+      <None Remove="TestCases\Parsing\success\life.cl" />
+      <None Remove="TestCases\Parsing\success\list.cl" />
+      <None Remove="TestCases\Parsing\success\lteassociativity.cl" />
+      <None Remove="TestCases\Parsing\success\many_objects_on_heap.cl" />
+      <None Remove="TestCases\Parsing\success\mod-param.cl" />
+      <None Remove="TestCases\Parsing\success\multiple-dispatch.cl" />
+      <None Remove="TestCases\Parsing\success\multiple-static-dispatch.cl" />
+      <None Remove="TestCases\Parsing\success\multipleatdispatches.cl" />
+      <None Remove="TestCases\Parsing\success\multipleattributes.cl" />
+      <None Remove="TestCases\Parsing\success\multipledispatches.cl" />
+      <None Remove="TestCases\Parsing\success\nested-arith.cl" />
+      <None Remove="TestCases\Parsing\success\nestedblocks.cl" />
+      <None Remove="TestCases\Parsing\success\nestedlet.cl" />
+      <None Remove="TestCases\Parsing\success\new-self-dispatch.cl" />
+      <None Remove="TestCases\Parsing\success\new-self-init.cl" />
+      <None Remove="TestCases\Parsing\success\new-st.cl" />
+      <None Remove="TestCases\Parsing\success\new_complex.cl" />
+      <None Remove="TestCases\Parsing\success\newbasic.cl" />
+      <None Remove="TestCases\Parsing\success\not.cl" />
+      <None Remove="TestCases\Parsing\success\objectequality.cl" />
+      <None Remove="TestCases\Parsing\success\override.cl" />
+      <None Remove="TestCases\Parsing\success\override-basic.cl" />
+      <None Remove="TestCases\Parsing\success\palindrome.cl" />
+      <None Remove="TestCases\Parsing\success\primes.cl" />
+      <None Remove="TestCases\Parsing\success\recclass.cl" />
+      <None Remove="TestCases\Parsing\success\scoping.cl" />
+      <None Remove="TestCases\Parsing\success\selftypeattribute.cl" />
+      <None Remove="TestCases\Parsing\success\sequence.cl" />
+      <None Remove="TestCases\Parsing\success\shadow-attr-case.cl" />
+      <None Remove="TestCases\Parsing\success\shadow-attr-formal.cl" />
+      <None Remove="TestCases\Parsing\success\shadow-attr-let.cl" />
+      <None Remove="TestCases\Parsing\success\shadow-case-let.cl" />
+      <None Remove="TestCases\Parsing\success\shadow-formal-case.cl" />
+      <None Remove="TestCases\Parsing\success\shadow-formal-let.cl" />
+      <None Remove="TestCases\Parsing\success\shadow-let-case.cl" />
+      <None Remove="TestCases\Parsing\success\shadow-let-let.cl" />
+      <None Remove="TestCases\Parsing\success\simple-gc.cl" />
+      <None Remove="TestCases\Parsing\success\sort_list.cl" />
+      <None Remove="TestCases\Parsing\success\staticdispatchnoargs.cl" />
+      <None Remove="TestCases\Parsing\success\string-methods.cl" />
+      <None Remove="TestCases\Parsing\success\test.cl" />
+      <None Remove="TestCases\Parsing\success\typename.cl" />
+      <None Remove="TestCases\Parsing\success\unaryassociativity.cl" />
+      <None Remove="TestCases\Parsing\success\while-val.cl" />
+      <None Remove="TestCases\Parsing\success\whileexpressionblock.cl" />
+      <None Remove="TestCases\Parsing\success\whileOK.cl" />
+      <None Remove="TestCases\Parsing\success\whileoneexpression.cl" />
+      <None Remove="TestCases\Semantics\fail\addedlet-int+string.cl" />
+      <None Remove="TestCases\Semantics\fail\addedlet-string+string.cl" />
+      <None Remove="TestCases\Semantics\fail\all-types-builtin-and-complex.cl" />
+      <None Remove="TestCases\Semantics\fail\arithprecedence.cl" />
+      <None Remove="TestCases\Semantics\fail\associativity.cl" />
+      <None Remove="TestCases\Semantics\fail\associativity+.cl" />
+      <None Remove="TestCases\Semantics\fail\associativity-times.cl" />
+      <None Remove="TestCases\Semantics\fail\associativitydiv.cl" />
+      <None Remove="TestCases\Semantics\fail\comparisons-assoc.cl" />
+      <None Remove="TestCases\Semantics\fail\dispatchonearg.cl" />
+      <None Remove="TestCases\Semantics\fail\equalsassociativity.cl" />
+      <None Remove="TestCases\Semantics\fail\error-out_string-param.cl" />
+      <None Remove="TestCases\Semantics\fail\example_coolmanual_pag7.cl" />
+      <None Remove="TestCases\Semantics\fail\inherit-bool.cl" />
+      <None Remove="TestCases\Semantics\fail\inherit-int.cl" />
+      <None Remove="TestCases\Semantics\fail\inherit-string.cl" />
+      <None Remove="TestCases\Semantics\fail\letinitmultiplebindings.cl" />
+      <None Remove="TestCases\Semantics\fail\lteassociativity.cl" />
+      <None Remove="TestCases\Semantics\fail\multipleattributes.cl" />
+      <None Remove="TestCases\Semantics\fail\recclass.cl" />
+      <None Remove="TestCases\Semantics\fail\testing_self.cl" />
+      <None Remove="TestCases\Semantics\fail\type-final-inherit-string.cl" />
+      <None Remove="TestCases\Semantics\fail\type-intt-not-exist.cl" />
+      <None Remove="TestCases\Semantics\fail\variable-in-parent-class.cl" />
+      <None Remove="TestCases\Semantics\fail\while-not-return-Object.cl" />
+      <None Remove="TestCases\Semantics\fail\whileoneexpression-type-object.cl" />
+      <None Remove="TestCases\Semantics\success\abort.cl" />
+      <None Remove="TestCases\Semantics\success\addedlet.cl" />
+      <None Remove="TestCases\Semantics\success\all-types-builtin.cl" />
+      <None Remove="TestCases\Semantics\success\arith.cl" />
+      <None Remove="TestCases\Semantics\success\assigngetstype.cl" />
+      <None Remove="TestCases\Semantics\success\assignment.cl" />
+      <None Remove="TestCases\Semantics\success\assignment-val.cl" />
+      <None Remove="TestCases\Semantics\success\assignseq.cl" />
+      <None Remove="TestCases\Semantics\success\associativity.cl" />
+      <None Remove="TestCases\Semantics\success\associativity+.cl" />
+      <None Remove="TestCases\Semantics\success\associativity-times.cl" />
+      <None Remove="TestCases\Semantics\success\associativitydiv.cl" />
+      <None Remove="TestCases\Semantics\success\atoi.cl" />
+      <None Remove="TestCases\Semantics\success\basic-init.cl" />
+      <None Remove="TestCases\Semantics\success\basicequality.cl" />
+      <None Remove="TestCases\Semantics\success\bigexample.cl" />
+      <None Remove="TestCases\Semantics\success\bigexpr.cl" />
+      <None Remove="TestCases\Semantics\success\book_list.cl" />
+      <None Remove="TestCases\Semantics\success\bool.cl" />
+      <None Remove="TestCases\Semantics\success\c.cl" />
+      <None Remove="TestCases\Semantics\success\calls.cl" />
+      <None Remove="TestCases\Semantics\success\case-order.cl" />
+      <None Remove="TestCases\Semantics\success\casemultiplebranch.cl" />
+      <None Remove="TestCases\Semantics\success\casevoid.cl" />
+      <None Remove="TestCases\Semantics\success\cells.cl" />
+      <None Remove="TestCases\Semantics\success\classmethodonearg.cl" />
+      <None Remove="TestCases\Semantics\success\classonefield.cl" />
+      <None Remove="TestCases\Semantics\success\classtwofields.cl" />
+      <None Remove="TestCases\Semantics\success\comparisons-assoc.cl" />
+      <None Remove="TestCases\Semantics\success\cool.cl" />
+      <None Remove="TestCases\Semantics\success\copy-self-dispatch.cl" />
+      <None Remove="TestCases\Semantics\success\copy-self-init.cl" />
+      <None Remove="TestCases\Semantics\success\dispatch-override-dynamic.cl" />
+      <None Remove="TestCases\Semantics\success\dispatch-override-static.cl" />
+      <None Remove="TestCases\Semantics\success\dispatch-void-dynamic.cl" />
+      <None Remove="TestCases\Semantics\success\dispatch-void-static.cl" />
+      <None Remove="TestCases\Semantics\success\dispatcharglist.cl" />
+      <None Remove="TestCases\Semantics\success\dispatchnoargs.cl" />
+      <None Remove="TestCases\Semantics\success\dispatchvoidlet.cl" />
+      <None Remove="TestCases\Semantics\success\eval-order-args.cl" />
+      <None Remove="TestCases\Semantics\success\eval-order-arith.cl" />
+      <None Remove="TestCases\Semantics\success\eval-order-self.cl" />
+      <None Remove="TestCases\Semantics\success\example_coolmanual_pag5.cl" />
+      <None Remove="TestCases\Semantics\success\example_coolmanual_pag9.cl" />
+      <None Remove="TestCases\Semantics\success\exp.cl" />
+      <None Remove="TestCases\Semantics\success\fact.cl" />
+      <None Remove="TestCases\Semantics\success\fibo.cl" />
+      <None Remove="TestCases\Semantics\success\fibo2.cl" />
+      <None Remove="TestCases\Semantics\success\good.cl" />
+      <None Remove="TestCases\Semantics\success\graph.cl" />
+      <None Remove="TestCases\Semantics\success\hairyscary.cl" />
+      <None Remove="TestCases\Semantics\success\hello_world.cl" />
+      <None Remove="TestCases\Semantics\success\ifexpressionblock.cl" />
+      <None Remove="TestCases\Semantics\success\ifnested.cl" />
+      <None Remove="TestCases\Semantics\success\init-default.cl" />
+      <None Remove="TestCases\Semantics\success\init-order-self.cl" />
+      <None Remove="TestCases\Semantics\success\init-order-super.cl" />
+      <None Remove="TestCases\Semantics\success\interaction-attrinit-method.cl" />
+      <None Remove="TestCases\Semantics\success\io.cl" />
+      <None Remove="TestCases\Semantics\success\let-nested.cl" />
+      <None Remove="TestCases\Semantics\success\let-scope-variable.cl" />
+      <None Remove="TestCases\Semantics\success\letassociativity.cl" />
+      <None Remove="TestCases\Semantics\success\letinit.cl" />
+      <None Remove="TestCases\Semantics\success\letinitmultiplebindings.cl" />
+      <None Remove="TestCases\Semantics\success\letnoinit.cl" />
+      <None Remove="TestCases\Semantics\success\letparens.cl" />
+      <None Remove="TestCases\Semantics\success\life.cl" />
+      <None Remove="TestCases\Semantics\success\list.cl" />
+      <None Remove="TestCases\Semantics\success\many_objects_on_heap.cl" />
+      <None Remove="TestCases\Semantics\success\mod-param.cl" />
+      <None Remove="TestCases\Semantics\success\multiple-dispatch.cl" />
+      <None Remove="TestCases\Semantics\success\nested-arith.cl" />
+      <None Remove="TestCases\Semantics\success\nestedblocks.cl" />
+      <None Remove="TestCases\Semantics\success\nestedlet.cl" />
+      <None Remove="TestCases\Semantics\success\new-self-dispatch.cl" />
+      <None Remove="TestCases\Semantics\success\new-self-init.cl" />
+      <None Remove="TestCases\Semantics\success\new-st.cl" />
+      <None Remove="TestCases\Semantics\success\newbasic.cl" />
+      <None Remove="TestCases\Semantics\success\not.cl" />
+      <None Remove="TestCases\Semantics\success\object-returned.cl" />
+      <None Remove="TestCases\Semantics\success\override.cl" />
+      <None Remove="TestCases\Semantics\success\override-basic.cl" />
+      <None Remove="TestCases\Semantics\success\palindrome.cl" />
+      <None Remove="TestCases\Semantics\success\primes.cl" />
+      <None Remove="TestCases\Semantics\success\print_string.cl" />
+      <None Remove="TestCases\Semantics\success\scoping.cl" />
+      <None Remove="TestCases\Semantics\success\selftypeattribute.cl" />
+      <None Remove="TestCases\Semantics\success\sequence.cl" />
+      <None Remove="TestCases\Semantics\success\shadow-attr-case.cl" />
+      <None Remove="TestCases\Semantics\success\shadow-attr-formal.cl" />
+      <None Remove="TestCases\Semantics\success\shadow-attr-let.cl" />
+      <None Remove="TestCases\Semantics\success\shadow-case-let.cl" />
+      <None Remove="TestCases\Semantics\success\shadow-formal-case.cl" />
+      <None Remove="TestCases\Semantics\success\shadow-formal-let.cl" />
+      <None Remove="TestCases\Semantics\success\shadow-let-case.cl" />
+      <None Remove="TestCases\Semantics\success\shadow-let-let.cl" />
+      <None Remove="TestCases\Semantics\success\simple-gc.cl" />
+      <None Remove="TestCases\Semantics\success\sort_list.cl" />
+      <None Remove="TestCases\Semantics\success\staticdispatchnoargs.cl" />
+      <None Remove="TestCases\Semantics\success\stdio.h.cl" />
+      <None Remove="TestCases\Semantics\success\string-methods.cl" />
+      <None Remove="TestCases\Semantics\success\test.cl" />
+      <None Remove="TestCases\Semantics\success\testing_self.cl" />
+      <None Remove="TestCases\Semantics\success\testing_self-assign.cl" />
+      <None Remove="TestCases\Semantics\success\unaryassociativity.cl" />
+      <None Remove="TestCases\Semantics\success\variable-without-right-assign.cl" />
+      <None Remove="TestCases\Semantics\success\void-not-call-function.cl" />
+      <None Remove="TestCases\Semantics\success\while-val.cl" />
+      <None Remove="TestCases\Semantics\success\whileexpressionblock.cl" />
+      <None Remove="TestCases\Semantics\success\whileOK.cl" />
+      <None Remove="TestCases\Semantics\success\whileoneexpression.cl" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="TestCases\Algorithm\fail\hairyscary.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\arith.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\assignment-val.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\assignseq.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\atoi_EDITED.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\bigexample.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\book_list.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\bool.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\c.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\cells.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\classonefield_EDITED.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\complex.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\copy-self-dispatch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\dispatch-override-static.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\example_coolmanual_pag7.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\example_coolmanual_pag9_EDITED.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\good_EDITED.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\graph.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\hello_world.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\init-default.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\init-order-super.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\io.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\lam-gc.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\lam.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\life.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\list.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\multiple-static-dispatch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\new-st.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\objectequality.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\override-basic.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\override.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\recclass.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\scoping.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\selftypeattribute.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\shadow-attr-case_EDITED.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\sort_list.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Algorithm\success\test.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\all_else_true.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\attrcapitalname.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\bad.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\badblock.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\baddispatch1.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\baddispatch2.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\baddispatch3.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\baddispatch4.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\badexprlist.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\badfeaturenames.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\badfeatures.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\casenoexpr.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\classbadinherits.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\classbadname.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\classnoname.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\emptyassign.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\emptymethodbody.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\emptyprogram.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\emptystaticdispatch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\extrasemicolonblock.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\firstbindingerrored.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\firstclasserrored.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\ifnoelse.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\ifnoelsebranch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\ifnofi.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\ifnothenbranch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\isvoidbadtype.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\multipleclasses.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\multiplemethoderrors.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\newbadtype.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\only_one_comment.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\returntypebad.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\secondbindingerrored.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\test.3.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\whilebad.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\fail\whilenoloop.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\abort.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\addedlet.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\arith.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\arithprecedence.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\assigngetstype.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\assignment-val.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\assignment.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\assignseq.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\associativity+.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\associativity-times.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\associativity.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\associativitydiv.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\atoi.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\atoi_test.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\basic-init.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\basicequality.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\bigexample.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\bigexpr.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\binary_tree.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\book_list.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\bool.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\c.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\calls.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\case-none.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\case-order.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\casemultiplebranch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\casevoid.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\cells.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\classmethodonearg.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\classonefield.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\classtwofields.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\comparisons-assoc.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\complex.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\cool.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\copy-self-dispatch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\copy-self-init.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\dispatch-override-dynamic.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\dispatch-override-static.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\dispatch-void-dynamic.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\dispatch-void-static.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\dispatcharglist.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\dispatchnoargs.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\dispatchonearg.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\dispatchvoidlet.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\equalsassociativity.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\eval-order-args.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\eval-order-arith.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\eval-order-self.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\example_coolmanual_pag5.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\example_coolmanual_pag7.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\example_coolmanual_pag9.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\exp.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\fact.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\fibo.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\formallists.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\good.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\graph.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\hairyscary.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\hello_world.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\ifexpressionblock.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\ifnested.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\init-default.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\init-order-self.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\init-order-super.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\interaction-attrinit-method.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\io.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\lam-gc.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\lam.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\let-nested.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\letassociativity.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\letinit.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\letinitmultiplebindings.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\letnoinit.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\letparens.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\life.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\list.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\lteassociativity.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\many_objects_on_heap.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\mod-param.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\multiple-dispatch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\multiple-static-dispatch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\multipleatdispatches.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\multipleattributes.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\multipledispatches.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\nested-arith.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\nestedblocks.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\nestedlet.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\new-self-dispatch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\new-self-init.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\new-st.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\newbasic.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\new_complex.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\not.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\objectequality.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\override-basic.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\override.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\palindrome.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\primes.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\recclass.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\scoping.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\selftypeattribute.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\sequence.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\shadow-attr-case.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\shadow-attr-formal.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\shadow-attr-let.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\shadow-case-let.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\shadow-formal-case.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\shadow-formal-let.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\shadow-let-case.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\shadow-let-let.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\simple-gc.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\sort_list.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\staticdispatchnoargs.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\string-methods.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\test.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\typename.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\unaryassociativity.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\while-val.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\whileexpressionblock.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\whileOK.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Parsing\success\whileoneexpression.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\addedlet-int+string.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\addedlet-string+string.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\all-types-builtin-and-complex.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\arithprecedence.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\associativity+.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\associativity-times.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\associativity.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\associativitydiv.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\comparisons-assoc.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\dispatchonearg.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\equalsassociativity.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\error-out_string-param.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\example_coolmanual_pag7.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\inherit-bool.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\inherit-int.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\inherit-string.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\letinitmultiplebindings.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\lteassociativity.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\multipleattributes.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\recclass.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\testing_self.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\type-final-inherit-string.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\type-intt-not-exist.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\variable-in-parent-class.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\while-not-return-Object.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\fail\whileoneexpression-type-object.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\abort.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\addedlet.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\all-types-builtin.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\arith.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\assigngetstype.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\assignment-val.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\assignment.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\assignseq.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\associativity+.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\associativity-times.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\associativity.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\associativitydiv.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\atoi.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\basic-init.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\basicequality.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\bigexample.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\bigexpr.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\book_list.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\bool.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\c.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\calls.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\case-order.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\casemultiplebranch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\casevoid.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\cells.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\classmethodonearg.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\classonefield.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\classtwofields.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\comparisons-assoc.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\cool.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\copy-self-dispatch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\copy-self-init.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\dispatch-override-dynamic.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\dispatch-override-static.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\dispatch-void-dynamic.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\dispatch-void-static.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\dispatcharglist.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\dispatchnoargs.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\dispatchvoidlet.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\eval-order-args.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\eval-order-arith.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\eval-order-self.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\example_coolmanual_pag5.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\example_coolmanual_pag9.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\exp.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\fact.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\fibo.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\fibo2.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\good.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\graph.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\hairyscary.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\hello_world.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\ifexpressionblock.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\ifnested.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\init-default.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\init-order-self.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\init-order-super.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\interaction-attrinit-method.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\io.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\let-nested.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\let-scope-variable.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\letassociativity.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\letinit.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\letinitmultiplebindings.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\letnoinit.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\letparens.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\life.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\list.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\many_objects_on_heap.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\mod-param.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\multiple-dispatch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\nested-arith.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\nestedblocks.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\nestedlet.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\new-self-dispatch.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\new-self-init.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\new-st.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\newbasic.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\not.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\object-returned.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\override-basic.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\override.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\palindrome.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\primes.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\print_string.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\scoping.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\selftypeattribute.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\sequence.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\shadow-attr-case.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\shadow-attr-formal.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\shadow-attr-let.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\shadow-case-let.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\shadow-formal-case.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\shadow-formal-let.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\shadow-let-case.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\shadow-let-let.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\simple-gc.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\sort_list.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\staticdispatchnoargs.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\stdio.h.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\string-methods.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\test.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\testing_self-assign.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\testing_self.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\unaryassociativity.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\variable-without-right-assign.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\void-not-call-function.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\while-val.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\whileexpressionblock.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\whileOK.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="TestCases\Semantics\success\whileoneexpression.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>
