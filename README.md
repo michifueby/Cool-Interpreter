@@ -2,9 +2,7 @@
 
 ## Concept
 ```mermaid
-%%| caption: Cool Interpreter – Professional 2025 Architecture (Final Design)
-%%| label: cool-interpreter-architecture-v2
-%%| id: cool-interpreter-diagram-v2
+
 flowchart TD
     %% ========================= INPUT =========================
     A[("
@@ -68,8 +66,8 @@ flowchart TD
         Int, String, Bool, Object, Void]
 
         RuntimeEngine --> Builtins[Built-in Classes
-        IO.out_string(), String.concat()
-        Object.abort(), type_name()]
+        IO.out_string, String_concat
+        Object.abort, type_name]
     end
 
     %% ========================= DECISION & OUTPUT =========================
@@ -86,7 +84,7 @@ flowchart TD
     ")]
 
     DiagOutput["
-    **Rich Diagnostics**
+    **Diagnostics**
     Hello.cool(12,8): error COOL0001: Undeclared identifier 'x'
     Main.cool(5,3): warning COOLW9001: Unused variable 'temp'
     "]
@@ -105,12 +103,13 @@ flowchart TD
 
     %% ========================= STYLING =========================
     classDef facade fill:#e6f3ff,stroke:#1890ff,stroke-width:3px,color:#1e3a8a,font-weight:bold
-    classDef internal fill:#f9f9f9,stroke:#666,stroke-dasharray: 6 6
-    classDef output fill:#f0fdf4,stroke:#22c55e,stroke-width:2px
-    classDef error fill:#fef2f2,stroke:#ef4444,stroke-width:2px
+    classDef internal fill:#f9f99,stroke:#666,stroke-dasharray: 6 6
+    classDef output fill:#f0df4,stroke:#22c55e,stroke-width:2px
+    classDef error fill:#feff2,stroke:#ef4444,stroke-width:2px
 
     class InterpreterFacade facade
     class Analyzer,Parser,Builder,AST,Semantic,SemanticResult,RuntimeEngine,Env,Obj,Val,Builtins internal
     class SuccessOutput output
     class DiagOutput,FinalOutput error
+
 ```
