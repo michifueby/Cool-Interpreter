@@ -23,7 +23,6 @@ flowchart TD
     subgraph Frontend ["Parsing & Semantic Analysis (Internal)"]
         direction TB
 
-        Analyzer --> Parser
         Parser[CoolParserEngine
         ANTLR wrapper]
 
