@@ -22,9 +22,6 @@ flowchart TD
 
     subgraph Frontend ["Parsing & Semantic Analysis (Internal)"]
         direction TB
-        Analyzer[CoolCodeAnalyzer
-        • Coordinates parsing + analysis
-        • Used only by CoolInterpreter]
 
         Analyzer --> Parser
         Parser[CoolParserEngine
