@@ -53,13 +53,11 @@ public class CoolSemanticAnalyzer : ISemanticAnalyzer
             return SemanticResult.Failure(diagnostics.Diagnostics);
 
         // Phase 2: Type check all features and expressions
-        /*var typeChecker = new TypeChecker(symbolTable, diagnostics);
+        var typeChecker = new TypeChecker(symbolTable, diagnostics);
         typeChecker.Check(syntaxTree);
 
-        return typeChecker.HasErrors
+        return diagnostics.HasErrors
             ? SemanticResult.Failure(diagnostics.Diagnostics)
-            : SemanticResult.Success(symbolTable, diagnostics.Diagnostics);*/
-        
-        throw new NotImplementedException();
+            : SemanticResult.Success(symbolTable, diagnostics.Diagnostics);
     }
 }

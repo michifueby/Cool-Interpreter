@@ -6,6 +6,9 @@
 // <summary>MethodSymbol</summary>
 //-----------------------------------------------------------------------
 
+using System.Collections.Immutable;
+using Cool.Interpreter.Lib.Core.Syntax;
+
 namespace Cool.Interpreter.Lib.Language.Symbols;
 
 /// <summary>
@@ -15,33 +18,33 @@ namespace Cool.Interpreter.Lib.Language.Symbols;
 /// This class encapsulates the name, return type, and formal parameters of a method.
 /// It is used to define and store metadata about methods within a class.
 /// </remarks>
-public class MethodSymbol(string name, string returnType)
+public sealed class MethodSymbol
 {
-    /// <summary>
-    /// Gets the name of the method.
-    /// </summary>
-    /// <remarks>
-    /// This property represents the identifier of the method defined in the Cool language.
-    /// It is used to uniquely distinguish the method within a class definition or scope.
-    /// </remarks>
-    public string Name { get; } = name;
+    public string Name { get; }
+    public string ReturnType { get; }
+    public ImmutableList<FormalSymbol> Formals { get; }
+    public SourcePosition Location { get; }
 
-    /// <summary>
-    /// Gets the return type of the method.
-    /// </summary>
-    /// <remarks>
-    /// This property specifies the type of value that the method is expected to return.
-    /// It defines the output type in the method's signature within the Cool language.
-    /// </remarks>
-    public string ReturnType { get; } = returnType;
+    public MethodSymbol(string name, string returnType, SourcePosition location = default)
+    {
+        Name       = name;
+        ReturnType = returnType;
+        Formals    = ImmutableList<FormalSymbol>.Empty;
+        Location   = location == default ? SourcePosition.None : location;
+    }
 
-    /// <summary>
-    /// Gets the list of formal parameters of the method.
-    /// </summary>
-    /// <remarks>
-    /// This property contains the formal parameters defined for the method,
-    /// represented as a collection of <see cref="FormalSymbol"/> objects.
-    /// Each formal parameter includes its name and type information.
-    /// </remarks>
-    public List<FormalSymbol> Formals { get; } = new();
+    private MethodSymbol(
+        string name,
+        string returnType,
+        ImmutableList<FormalSymbol> formals,
+        SourcePosition location)
+    {
+        Name       = name;
+        ReturnType = returnType;
+        Formals    = formals;
+        Location   = location;
+    }
+
+    public MethodSymbol AddFormal(string name, string type) =>
+        new(Name, ReturnType, Formals.Add(new FormalSymbol(name, type)), Location);
 }

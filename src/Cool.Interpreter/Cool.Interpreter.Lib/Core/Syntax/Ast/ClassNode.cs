@@ -8,6 +8,8 @@
 
 namespace Cool.Interpreter.Lib.Core.Syntax.Ast;
 
+using Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
+
 /// <summary>
 /// Represents a class node within the Cool Abstract Syntax Tree (AST).
 /// Encapsulates the definition of a Cool class, including its name,
@@ -16,45 +18,47 @@ namespace Cool.Interpreter.Lib.Core.Syntax.Ast;
 public class ClassNode : CoolSyntaxNode
 {
     /// <summary>
-    /// Gets the name of the class represented by this <see cref="ClassNode"/> instance.
-    /// This value corresponds to the identifier used to define the class within the Cool program.
+    /// Represents a class node in the Cool programming language's Abstract Syntax Tree (AST).
+    /// Encapsulates the structure and metadata of a Cool class, including its name,
+    /// potential inheritance, and associated feature definitions.
     /// </summary>
-    public string Name { get; }
-
-    /// <summary>
-    /// Gets the name of the parent class from which this <see cref="ClassNode"/> instance inherits.
-    /// Returns <c>null</c> if the class does not explicitly inherit from another class.
-    /// </summary>
-    public string? InheritsFrom { get; }
-
-    /// <summary>
-    /// Gets the collection of features defined within this <see cref="ClassNode"/> instance.
-    /// Features represent the structural and behavioral components of the class, including
-    /// attributes and methods.
-    /// </summary>
-    public IReadOnlyList<FeatureNode> Features { get; }
-
-    /// <summary>
-    /// Gets the location of this <see cref="ClassNode"/> instance within the source code.
-    /// Represents the position in the file, including line and column information,
-    /// where the class definition is declared.
-    /// </summary>
-    public SourcePosition Location { get; }  
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ClassNode"/> class.
-    /// </summary>
-    /// <param name="name"></param>
-    /// <param name="inheritsFrom"></param>
-    /// <param name="features"></param>
-    /// <param name="location"></param>
-    public ClassNode(string name, string? inheritsFrom, 
-        IReadOnlyList<FeatureNode> features, 
-        SourcePosition location)
+    public ClassNode(string name, string? inheritsFrom,
+        IReadOnlyList<FeatureNode> features, SourcePosition location)
+        : base(location)
     {
         Name = name;
         InheritsFrom = inheritsFrom;
         Features = features;
-        Location = location;
     }
+    
+    /// <summary>
+    /// Gets the name of the class represented by the current class node.
+    /// This property is used to identify the class in the Cool Abstract Syntax Tree (AST),
+    /// as well as in various operations such as inheritance validation, symbol registration, and runtime evaluation.
+    /// </summary>
+    public string Name { get; }
+
+    /// <summary>
+    /// Gets the name of the parent class from which the current class derives, if specified.
+    /// This property represents the optional inheritance relationship for a class in the Cool Abstract Syntax Tree (AST).
+    /// It is used in operations such as inheritance validation, hierarchy resolution, and symbol registration.
+    /// </summary>
+    public string? InheritsFrom { get; }
+
+    /// <summary>
+    /// Gets the collection of features defined within the current class node.
+    /// Features represent the functional components of a class, such as attributes and methods,
+    /// and provide the building blocks for the class's behavior and structure.
+    /// </summary>
+    public IReadOnlyList<FeatureNode> Features { get; }
+
+    /// <summary>
+    /// Accepts a visitor that implements the <see cref="ICoolSyntaxVisitor{T}"/> interface, allowing
+    /// the implementation of custom behavior for the current <see cref="ClassNode"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the result produced by the visitor.</typeparam>
+    /// <param name="visitor">An instance of a class implementing the <see cref="ICoolSyntaxVisitor{T}"/> interface.</param>
+    /// <returns>The result produced by the visitor after processing the current <see cref="ClassNode"/>.</returns>
+    public override T Accept<T>(ICoolSyntaxVisitor<T> visitor)
+        => visitor.Visit(this);
 }

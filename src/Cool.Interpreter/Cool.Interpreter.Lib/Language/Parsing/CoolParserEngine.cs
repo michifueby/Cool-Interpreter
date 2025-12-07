@@ -63,7 +63,7 @@ public class CoolParserEngine
                     diagnostics: diagnostics.Diagnostics);
             }
 
-            var visitor = new AstBuilderVisitor(diagnostics, sourceName);
+            var visitor = new AstBuilderVisitor(sourceName);
             var syntaxTree = visitor.Visit(programContext) as ProgramNode;
 
             return new ParseResult(

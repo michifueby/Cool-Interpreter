@@ -6,24 +6,20 @@
 // <summary>FormalSymbol</summary>
 //-----------------------------------------------------------------------
 
+using Cool.Interpreter.Lib.Core.Syntax;
+
 namespace Cool.Interpreter.Lib.Language.Symbols;
 
-/// <summary>
-/// Represents a formal parameter symbol in the Cool language.
-/// </summary>
-/// <remarks>
-/// A formal symbol encapsulates the name and type information for a parameter,
-/// typically used in method or function declarations.
-/// </remarks>
-public class FormalSymbol(string name, string type)
+public class FormalSymbol
 {
-    /// <summary>
-    /// Gets the name of the formal symbol. This represents the identifier associated with the symbol.
-    /// </summary>
-    public string Name { get; } = name;
+    public string Name { get; }
+    public string Type { get; }
+    public SourcePosition Location { get; }
 
-    /// <summary>
-    /// Gets the type associated with the formal symbol. This represents the data type of the parameter in the context of a method or function declaration.
-    /// </summary>
-    public string Type { get; } = type;
+    public FormalSymbol(string name, string type, SourcePosition location = default)
+    {
+        Name     = name;
+        Type     = type;
+        Location = location == default ? SourcePosition.None : location;
+    }
 }

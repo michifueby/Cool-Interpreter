@@ -6,23 +6,23 @@
 // <summary>AttributeSymbol</summary>
 //-----------------------------------------------------------------------
 
+using Cool.Interpreter.Lib.Core.Syntax;
+using Cool.Interpreter.Lib.Core.Syntax.Ast.Expressions;
+
 namespace Cool.Interpreter.Lib.Language.Symbols;
 
-/// <summary>
-/// Represents an attribute symbol in the context of a programming language's symbol table.
-/// An attribute is defined by its name and type, and is typically tied to a class or object.
-/// </summary>
-public class AttributeSymbol(string name, string type)
+public sealed class AttributeSymbol
 {
-    /// <summary>
-    /// Gets the name of the attribute represented by this symbol.
-    /// The name uniquely identifies the attribute within its context.
-    /// </summary>
-    public string Name { get; } = name;
+    public string Name { get; }
+    public string Type { get; }
+    public ExpressionNode? Initializer { get; }  // Important for later!
+    public SourcePosition Location { get; }
 
-    /// <summary>
-    /// Gets the type of the attribute represented by this symbol.
-    /// The type defines the data type or classification of the attribute within its context.
-    /// </summary>
-    public string Type { get; } = type;
+    public AttributeSymbol(string name, string type, ExpressionNode? initializer = null, SourcePosition location = default)
+    {
+        Name        = name;
+        Type        = type;
+        Initializer = initializer;
+        Location    = location == default ? SourcePosition.None : location;
+    }
 }

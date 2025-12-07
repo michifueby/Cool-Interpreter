@@ -6,6 +6,8 @@
 // <summary>CoolClass</summary>
 //-----------------------------------------------------------------------
 
+using Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
+
 namespace Cool.Interpreter.Lib.Language.Classes;
 
 using System.Collections.Immutable;

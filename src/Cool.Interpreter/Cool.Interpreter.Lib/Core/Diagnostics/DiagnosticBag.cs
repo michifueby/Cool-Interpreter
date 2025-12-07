@@ -14,7 +14,7 @@ using Cool.Interpreter.Lib.Core.Syntax;
 /// <summary>
 /// Bag that collects diagnostics during compilation/interpretation.
 /// </summary>
-public sealed class DiagnosticBag
+public class DiagnosticBag
 {
     /// <summary>
     /// Stores a collection of diagnostic messages generated during compilation or interpretation.
