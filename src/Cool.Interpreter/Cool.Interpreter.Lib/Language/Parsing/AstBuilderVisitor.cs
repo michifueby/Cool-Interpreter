@@ -285,12 +285,16 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
         var left = Visit(context.expression(0)) as ExpressionNode;
         var right = Visit(context.expression(1)) as ExpressionNode;
 
-        var op = context.op.Type switch
+        BinaryOperator op = context.op.Text switch
         {
-            CoolParser.T__10 => BinaryOperator.Multiply,   // '*'
-            CoolParser.T__11 => BinaryOperator.Divide,     // '/'
-            CoolParser.T__12 => BinaryOperator.Plus,       // '+'
-            CoolParser.T__13 => BinaryOperator.Minus,      // '-'
+            "+" =>  BinaryOperator.Plus,       // '+'
+            
+            "-" => BinaryOperator.Minus,      // '-'
+            
+            "*" => BinaryOperator.Multiply,   // '*'
+            
+            "/" => BinaryOperator.Divide,     // '/'
+            
             _ => throw new InvalidOperationException($"Unknown arithmetic operator {context.op.Text}")
         };
 
@@ -312,11 +316,14 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
         var left = Visit(context.expression(0)) as ExpressionNode;
         var right = Visit(context.expression(1)) as ExpressionNode;
 
-        var op = context.op.Type switch
+        var op = context.op.Text switch
         {
-            CoolParser.T__14 => BinaryOperator.LessThanOrEqual,   // '<='
-            CoolParser.T__15 => BinaryOperator.LessThan,          // '<'
-            CoolParser.T__16 => BinaryOperator.Equal,             // '='
+            "<=" => BinaryOperator.LessThanOrEqual,   // '<='
+            
+            "<" => BinaryOperator.LessThan,          // '<'
+            
+            "=" => BinaryOperator.Equal,             // '='
+            
             _ => throw new InvalidOperationException($"Unknown comparison operator {context.op.Text}")
         };
 

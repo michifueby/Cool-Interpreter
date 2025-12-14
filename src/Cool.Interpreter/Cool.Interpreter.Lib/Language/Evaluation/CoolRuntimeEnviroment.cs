@@ -1,29 +1,73 @@
-using System.Collections.Immutable;
-using Cool.Interpreter.Lib.Core.Exeptions;
-using Cool.Interpreter.Lib.Core.Syntax.Ast;
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Expressions;
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
+
+
+
+namespace Cool.Interpreter.Lib.Language.Evaluation;
+
+using System;
+using System.IO;
 using Cool.Interpreter.Lib.Language.Classes;
 using Cool.Interpreter.Lib.Language.Classes.BuiltIn;
 using Cool.Interpreter.Lib.Language.Symbols;
 
-namespace Cool.Interpreter.Lib.Language.Evaluation;
-
 public class CoolRuntimeEnvironment
 {
-    private readonly TextWriter _output;
-    private readonly TextReader _input;
+    public SymbolTable SymbolTable { get; }
+    public TextWriter Output { get; }
+    public TextReader Input { get; }
 
-    public CoolRuntimeEnvironment(SymbolTable symbolTable, TextWriter? output = null, TextReader? input = null)
+    // These are created once and never changed
+    public CoolObject ObjectRoot { get; }
+    public CoolIo Io { get; }
+
+    public CoolRuntimeEnvironment(
+        SymbolTable symbolTable,
+        TextWriter output,
+        TextReader input,
+        CoolObject objectRoot,
+        CoolIo io)
     {
-        this.SymbolTable = symbolTable ?? throw new ArgumentNullException(nameof(symbolTable));
-        _output = output ?? Console.Out;
-        _input = input ?? Console.In;
+        SymbolTable = symbolTable;
+        Output      = output;
+        Input       = input;
+        ObjectRoot  = objectRoot;
+        Io          = io;
     }
 
-    public SymbolTable SymbolTable { get; set; }
+    /// <summary>
+    /// Main constructor — builds the full runtime environment.
+    /// </summary>
+    public CoolRuntimeEnvironment(
+        SymbolTable symbolTable,
+        TextWriter? output = null,
+        TextReader? input = null)
+    {
+        SymbolTable = symbolTable ?? throw new ArgumentNullException(nameof(symbolTable));
+        Output      = output ?? Console.Out;
+        Input       = input  ?? Console.In;
 
+        // Build Object root class from symbol table
+        var objectSymbol = symbolTable.GetClass("Object")
+            ?? throw new InvalidOperationException("Class 'Object' not found in symbol table");
 
-    
-    
+        var objectRuntimeClass = RuntimeClassFactory.FromSymbol(objectSymbol, this);
+
+        // Create the single root object (shared by all Object instances)
+        ObjectRoot = ObjectFactory.Create(objectRuntimeClass, this);
+
+        // IO is the only object that needs the environment reference
+        Io = new CoolIo(this);
+    }
+
+    // Fluent builders — preserve expensive ObjectRoot and Io when possible
+    public CoolRuntimeEnvironment WithOutput(TextWriter writer) =>
+        new(SymbolTable, writer, Input, ObjectRoot, Io);
+
+    public CoolRuntimeEnvironment WithInput(TextReader reader) =>
+        new(SymbolTable, Output, reader, ObjectRoot, Io);
+
+    public CoolRuntimeEnvironment WithSymbolTable(SymbolTable newTable)
+    {
+        // We cannot reuse ObjectRoot/Io — they depend on the old symbol table
+        return new CoolRuntimeEnvironment(newTable, Output, Input);
+    }
 }

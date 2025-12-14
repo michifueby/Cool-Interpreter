@@ -6,6 +6,8 @@
 // <summary>CoolParserEngine</summary>
 //-----------------------------------------------------------------------
 
+using Antlr4.Runtime.Misc;
+
 namespace Cool.Interpreter.Lib.Language.Parsing;
 
 using Antlr4.Runtime;
@@ -49,37 +51,36 @@ public class CoolParserEngine
         parser.AddErrorListener(errorListener);
 
         // Enable rich error recovery (continue after errors)
-        parser.ErrorHandler = new BailErrorStrategy(); 
+        parser.ErrorHandler = new DefaultErrorStrategy();
 
         try
         {
-            var programContext = parser.program();
-
-            // Only build AST if there were no fatal lexer/parser errors
-            if (diagnostics.HasErrors)
-            {
-                return new ParseResult(
-                    syntaxTree: null,
-                    diagnostics: diagnostics.Diagnostics);
-            }
+            var context = parser.program();
 
             var visitor = new AstBuilderVisitor(sourceName);
-            var syntaxTree = visitor.Visit(programContext) as ProgramNode;
+            var programNode = visitor.Visit(context) as ProgramNode;
 
-            return new ParseResult(
-                syntaxTree: syntaxTree,
-                diagnostics: diagnostics.Diagnostics);
+            return new ParseResult(programNode, diagnostics.Diagnostics);
         }
-        catch (Exception ex)
+        catch (ParseCanceledException ex)
         {
-            // This should never happen — but if visitor crashes, report it gracefully
+            diagnostics.ReportError(
+                location: new SourcePosition(sourceName, 1, 1),
+                code: "COOL0001",
+                message: "Parsing failed due to syntax error or ambiguous grammar (likely left recursion). " +
+                         "Check your input or grammar rules.");
+
+            return new ParseResult(null, diagnostics.Diagnostics);
+        }
+        catch (Exception ex) when (!(ex is ParseCanceledException))
+        {
+            // Real crashes (should never happen)
             diagnostics.ReportInternal(
-                location: new SourcePosition(sourceName, 1, 1),"COOL0000",
+                location: new SourcePosition(sourceName, 1, 1),
+                code: "COOL0000",
                 message: $"Internal parser error: {ex.Message}");
 
-            return new ParseResult(
-                syntaxTree: null,
-                diagnostics: diagnostics.Diagnostics);
+            return new ParseResult(null, diagnostics.Diagnostics);
         }
     }
 }

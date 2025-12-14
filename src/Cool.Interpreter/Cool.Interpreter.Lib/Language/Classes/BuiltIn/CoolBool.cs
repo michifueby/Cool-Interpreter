@@ -26,7 +26,8 @@ public class CoolBool : CoolObject
     /// <summary>
     /// Represents a "Bool" type object in the Cool language, which is a wrapper around a boolean value.
     /// </summary>
-    public CoolBool(bool value) : base(PredefinedClasses.Bool) => Value = value;
+    public CoolBool(bool value) : base(PredefinedClasses.Bool) 
+        => Value = value;
 
     /// <summary>
     /// Gets the boolean value encapsulated within the current CoolBool instance.
@@ -69,7 +70,8 @@ public class CoolBool : CoolObject
     /// Converts the boolean value represented by this CoolBool instance into its string representation ("true" or "false").
     /// </summary>
     /// <returns>A string representation of the boolean value.</returns>
-    public override string AsString() => Value ? "true" : "false";
+    public override string AsString() 
+        => Value ? "true" : "false";
 
     /// <summary>
     /// Returns a string representation of the boolean value wrapped by this CoolBool instance.
@@ -77,7 +79,8 @@ public class CoolBool : CoolObject
     /// <returns>
     /// A string "true" if the value is true; otherwise, "false".
     /// </returns>
-    public override string ToString() => AsString();
+    public override string ToString() 
+        => AsString();
 
     /// <summary>
     /// Determines whether the specified object is equal to the current CoolBool instance.
@@ -86,7 +89,8 @@ public class CoolBool : CoolObject
     /// <returns>
     /// true if the specified object is a CoolBool with the same boolean value; otherwise, false.
     /// </returns>
-    public override bool Equals(object? obj) => obj is CoolBool b && Value == b.Value;
+    public override bool Equals(object? obj) 
+        => obj is CoolBool b && Value == b.Value;
 
     /// <summary>
     /// Returns the hash code for the current instance based on its encapsulated boolean value.
@@ -94,5 +98,14 @@ public class CoolBool : CoolObject
     /// <returns>
     /// An integer representing the hash code of the boolean value encapsulated by this CoolBool instance.
     /// </returns>
-    public override int GetHashCode() => Value.GetHashCode();
+    public override int GetHashCode() 
+        => Value.GetHashCode();
+
+    /// <summary>
+    /// Converts a boolean value into a CoolBool instance.
+    /// </summary>
+    /// <param name="value">The boolean value to be converted into the CoolBool instance.</param>
+    /// <returns>An instance of <see cref="CoolBool"/> representing the provided boolean value.</returns>
+    public static CoolBool From(bool value) 
+        => value ? True : False;
 }

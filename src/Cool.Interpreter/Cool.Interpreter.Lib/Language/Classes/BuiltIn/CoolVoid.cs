@@ -36,12 +36,14 @@ public class CoolVoid : CoolObject
     /// reflecting the absence of a value.
     /// </summary>
     /// <returns>A string representing the "void" value, which is always "void".</returns>
-    public override string AsString() => "void";
+    public override string AsString() 
+        => "void";
 
     /// <summary>
     /// Returns a string representation of the current CoolVoid instance.
     /// This override provides a textual description of "void," which represents the absence of a value in the Cool programming language.
     /// </summary>
     /// <returns>A string literal "void".</returns>
-    public override string ToString() => "void";
+    public override string ToString() 
+        => "void";
 }

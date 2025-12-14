@@ -16,49 +16,106 @@ using Cool.Interpreter.Lib.Core.Diagnostics;
 /// Represents the complete result of executing a Cool program via <see cref="CoolInterpreter"/>.
 /// This is the one and only return type from the public facade.
 /// </summary>
-public class InterpretationResult
+public sealed class InterpretationResult
 {
-    public string Output { get; }
-    public CoolObject? ReturnedValue { get; }
-    
-    public IReadOnlyList<Diagnostic> Diagnostics { get; }
-    
-    public bool IsSuccess => Diagnostics.All(d => d.Severity != DiagnosticSeverity.Error);
+    /// <summary>
+    /// True if the program executed successfully (no errors).
+    /// Warnings do not make it false.
+    /// </summary>
+    public bool IsSuccess { get; }
 
-    private InterpretationResult(string output, CoolObject? returnedValue, IReadOnlyList<Diagnostic> diagnostics)
+    /// <summary>
+    /// Everything written via out_string() / out_int().
+    /// Never null.
+    /// </summary>
+    public string Output { get; }
+
+    /// <summary>
+    /// String representation of the value returned by main().
+    /// Empty string if void/null. Never null.
+    /// </summary>
+    public string ReturnedValue { get; }
+
+    /// <summary>
+    /// All diagnostics from parsing, semantic analysis, and runtime.
+    /// Never null.
+    /// </summary>
+    public ImmutableArray<Diagnostic> Diagnostics { get; }
+
+    // Private constructor — forces use of factory methods
+    private InterpretationResult(
+        bool isSuccess,
+        string output,
+        string returnedValue,
+        ImmutableArray<Diagnostic> diagnostics)
     {
-        Output = output ?? string.Empty;
-        ReturnedValue = returnedValue;
-        Diagnostics = diagnostics ?? ImmutableArray<Diagnostic>.Empty;
+        IsSuccess     = isSuccess;
+        Output        = output        ?? string.Empty;
+        ReturnedValue = returnedValue ?? string.Empty;
+        Diagnostics   = diagnostics.IsDefault ? ImmutableArray<Diagnostic>.Empty : diagnostics;
     }
 
-    /// <summary>
-    /// Creates a new <see cref="InterpretationResult"/> instance representing a successful execution of a Cool program.
-    /// </summary>
-    /// <param name="output">The output produced by the interpreter during execution.</param>
-    /// <param name="returnedValue">The primary return value of the program execution.</param>
-    /// <returns>A new instance of <see cref="InterpretationResult"/> with no diagnostics and marked as successful.</returns>
-    public static InterpretationResult Success(string output, CoolObject? returnedValue)
-        => new(output, returnedValue, ImmutableArray<Diagnostic>.Empty);
+    // --------------------------------------------------------------------
+    // Factory methods
+    // --------------------------------------------------------------------
+    public static InterpretationResult Success(
+        string output,
+        string? returnedValue = null,
+        ImmutableArray<Diagnostic>? diagnostics = null) =>
+        new(
+            isSuccess: true,
+            output: output ?? string.Empty,
+            returnedValue: returnedValue ?? string.Empty,
+            diagnostics: diagnostics ?? ImmutableArray<Diagnostic>.Empty);
 
-    /// <summary>
-    /// Creates a new <see cref="InterpretationResult"/> instance representing a failed execution of a Cool program.
-    /// </summary>
-    /// <param name="output">The output produced by the interpreter during execution, if any.</param>
-    /// <param name="returnedValue">The primary return value of the program execution, if applicable.</param>
-    /// <param name="diagnostics">A list of diagnostics generated during execution, representing errors or warnings.</param>
-    /// <returns>A new instance of <see cref="InterpretationResult"/> with the provided diagnostics and marked as failed.</returns>
-    public static InterpretationResult Failure(string output, CoolObject? returnedValue,
-        IReadOnlyList<Diagnostic> diagnostics)
-        => new(output, returnedValue, diagnostics);
+    public static InterpretationResult Failure(
+        string output,
+        ImmutableArray<Diagnostic> diagnostics,
+        string? returnedValue = null) =>
+        new(
+            isSuccess: false,
+            output: output ?? string.Empty,
+            returnedValue: returnedValue ?? string.Empty,
+            diagnostics: diagnostics);
 
+    // Convenience overloads
+    public static InterpretationResult Failure(string output, Diagnostic diagnostic) =>
+        Failure(output, ImmutableArray.Create(diagnostic));
+
+    public static InterpretationResult Failure(string output, params Diagnostic[] diagnostics) =>
+        Failure(output, diagnostics.ToImmutableArray());
+
+    // --------------------------------------------------------------------
+    // Helpful properties
+    // --------------------------------------------------------------------
+    public bool HasErrors   => Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error);
+    public bool HasWarnings => Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Warning);
+
+    // --------------------------------------------------------------------
+    // Beautiful ToString()
+    // --------------------------------------------------------------------
     public override string ToString()
     {
-        if (!IsSuccess)
-            return $"Execution failed with {Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Error)} error(s)";
+        if (!IsSuccess || HasErrors)
+        {
+            int errorCount = Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Error);
+            return errorCount == 1
+                ? "Execution failed with 1 error."
+                : $"Execution failed with {errorCount} errors.";
+        }
 
-        return ReturnedValue is null // Missing --> Add is CoolNull !!!
-            ? $"Execution completed. Output length: {Output.Length} character(s)."
-            : $"Execution completed → {ReturnedValue}\nOutput:\n{Output}";
+        bool hasOutput = !string.IsNullOrWhiteSpace(Output);
+        bool hasValue  = !string.IsNullOrEmpty(ReturnedValue);
+
+        if (!hasOutput && !hasValue)
+            return "Execution completed successfully (no output).";
+
+        if (!hasValue)
+            return $"Execution completed.\nOutput:\n{Output.TrimEnd()}";
+
+        if (!hasOutput)
+            return $"Execution completed → {ReturnedValue}";
+
+        return $"Execution completed → {ReturnedValue}\nOutput:\n{Output.TrimEnd()}";
     }
 }

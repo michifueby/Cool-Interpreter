@@ -37,25 +37,32 @@ public class CoolSemanticAnalyzer : ISemanticAnalyzer
         ArgumentNullException.ThrowIfNull(syntaxTree);
         ArgumentNullException.ThrowIfNull(diagnostics);
 
-        var symbolTable = new SymbolTable();
+        // Start with the built-in classes already registered
+        var symbolTable = SymbolTable.Empty;
 
-        // Phase 1: Register all classes and build inheritance graph
+        // Phase 1: Register user-defined classes + basic validation
         var inheritanceChecker = new InheritanceChecker(symbolTable, diagnostics);
         inheritanceChecker.RegisterClasses(syntaxTree);
 
+        // Early exit if basic errors (duplicate class, redefine builtin, etc.)
         if (diagnostics.HasErrors)
+        {
             return SemanticResult.Failure(diagnostics.Diagnostics);
+        }
 
-        // Detect inheritance cycles -> Implementation missing
-        inheritanceChecker.CheckInheritanceGraph();
-            
+        // Phase2: Build full inheritance graph and detect cycles
+        inheritanceChecker.CheckInheritanceGraph();       // reports COOL0106 if cycle found
+
         if (diagnostics.HasErrors)
+        {
             return SemanticResult.Failure(diagnostics.Diagnostics);
+        }
 
-        // Phase 2: Type check all features and expressions
+        // Phase3: Full type checking (attributes, methods, expressions)
         var typeChecker = new TypeChecker(symbolTable, diagnostics);
         typeChecker.Check(syntaxTree);
 
+        // Final result
         return diagnostics.HasErrors
             ? SemanticResult.Failure(diagnostics.Diagnostics)
             : SemanticResult.Success(symbolTable, diagnostics.Diagnostics);

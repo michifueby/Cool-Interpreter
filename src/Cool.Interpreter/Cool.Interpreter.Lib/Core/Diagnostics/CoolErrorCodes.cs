@@ -166,4 +166,45 @@ public static class CoolErrorCodes
     /// in the Cool programming language.
     /// </summary>
     public const string SelfTypeMisuse = "COOL0261"; // Invalid use of SELF_TYPE outside class context
+    
+    /// <summary>
+    /// Runtime error: division by zero occurred.
+    /// </summary>
+    public const string DivisionByZero = "COOL0301";
+
+    /// <summary>
+    /// Runtime error: substr() called with invalid index or length.
+    /// </summary>
+    public const string SubstrOutOfRange = "COOL0302";
+
+    /// <summary>
+    /// Runtime error: abort() was explicitly called.
+    /// </summary>
+    public const string AbortCalled = "COOL0303";
+
+    /// <summary>
+    /// Runtime error: attribute access on non-object (e.g. Int.x).
+    /// </summary>
+    public const string AttributeAccessOnPrimitive = "COOL0304";
+
+    /// <summary>
+    /// Runtime error: assignment to a non-existent attribute.
+    /// </summary>
+    public const string AssignToUndefinedAttribute = "COOL0305";
+
+    /// <summary>
+    /// Runtime error: dispatch on void (e.g. x.f() where x is void).
+    /// </summary>
+    public const string DispatchOnVoid = "COOL0306";
+
+    /// <summary>
+    /// Runtime error: internal interpreter bug — should never happen in correct programs.
+    /// </summary>
+    public const string InternalInterpreterError = "COOL0399";
+
+    /// <summary>
+    /// Catch-all runtime error for unexpected exceptions during evaluation.
+    /// Used when a user exception (e.g. from CoolRuntimeException) has no specific code.
+    /// </summary>
+    public const string RuntimeError = "COOL0398";
 }

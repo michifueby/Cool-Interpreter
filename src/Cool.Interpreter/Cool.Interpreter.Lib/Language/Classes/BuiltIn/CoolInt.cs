@@ -20,7 +20,8 @@ public class CoolInt : CoolObject
     /// <summary>
     /// Represents a built-in class for the 'Int' type in the Cool programming language.
     /// </summary>
-    public CoolInt(int value) : base(PredefinedClasses.Int) => Value = value;
+    public CoolInt(int value) : base(PredefinedClasses.Int) 
+        => Value = value;
 
     /// <summary>
     /// Gets the integer value associated with the current instance of the <see cref="CoolInt"/> class.
@@ -34,7 +35,8 @@ public class CoolInt : CoolObject
     /// <returns>
     /// A string that represents the integer value stored in the current instance of CoolInt.
     /// </returns>
-    public override string AsString() => Value.ToString();
+    public override string AsString() 
+        => Value.ToString();
 
     /// <summary>
     /// Converts the wrapped integer value contained within the `CoolInt` instance to its string representation.
@@ -42,7 +44,8 @@ public class CoolInt : CoolObject
     /// <returns>
     /// A string representation of the integer value contained in this `CoolInt` instance.
     /// </returns>
-    public override string ToString() => Value.ToString();
+    public override string ToString() 
+        => Value.ToString();
 
     /// <summary>
     /// Determines whether the specified object is equal to the current `CoolInt` instance.
@@ -60,5 +63,23 @@ public class CoolInt : CoolObject
     /// The hash code is derived from the integer value contained in the CoolInt object.
     /// </summary>
     /// <returns>An integer representing the hash code of the CoolInt instance.</returns>
-    public override int GetHashCode() => Value.GetHashCode();
+    public override int GetHashCode() 
+        => Value.GetHashCode();
+
+    /// <summary>
+    /// Represents the constant integer value of zero in the Cool programming language.
+    /// This predefined instance of the <see cref="CoolInt"/> class is used to avoid
+    /// creating multiple instances for the integer value 0, promoting memory efficiency
+    /// and consistency across the Cool runtime.
+    /// </summary>
+    public static readonly CoolInt Zero = new(0);
+
+    /// <summary>
+    /// Creates an instance of the <see cref="CoolInt"/> class with a specified integer value.
+    /// If the provided value is 0, the predefined <see cref="CoolInt.Zero"/> instance is returned
+    /// to optimize memory usage and ensure consistency.
+    /// </summary>
+    /// <param name="value">The integer value to wrap in a <see cref="CoolInt"/> instance.</param>
+    /// <returns>A <see cref="CoolInt"/> instance wrapping the specified integer value.</returns>
+    public static CoolInt From(int value) => value == 0 ? Zero : new CoolInt(value);
 }

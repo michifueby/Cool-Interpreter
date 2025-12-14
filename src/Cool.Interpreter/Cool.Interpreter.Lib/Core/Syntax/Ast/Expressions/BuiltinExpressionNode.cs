@@ -1,3 +1,11 @@
+//-----------------------------------------------------------------------
+// <copyright file="BuiltinExpressionNode.cs" company="FH Wiener Neustadt">
+//     Copyright (c) FH Wiener Neustadt. All rights reserved.
+// </copyright>
+// <author>Michael Füby, Armin Zimmerling, Mahmoud Ibrahim</author>
+// <summary>BuiltinExpressionNode</summary>
+//-----------------------------------------------------------------------
+
 namespace Cool.Interpreter.Lib.Core.Syntax.Ast.Expressions;
 
 /// <summary>
@@ -8,12 +16,6 @@ namespace Cool.Interpreter.Lib.Core.Syntax.Ast.Expressions;
 public class BuiltinExpressionNode : ExpressionNode
 {
     /// <summary>
-    /// Gets the name of the built-in expression represented by this node.
-    /// The name uniquely identifies the specific built-in construct in the Cool language syntax.
-    /// </summary>
-    public string Name { get; }
-
-    /// <summary>
     /// Represents a node in the abstract syntax tree (AST) corresponding to a built-in expression in the Cool programming language.
     /// </summary>
     /// <remarks>
@@ -21,7 +23,25 @@ public class BuiltinExpressionNode : ExpressionNode
     /// or semantics directly supported by the language. These expressions may not be implemented
     /// by the user and instead are treated as inherent features of the language.
     /// </remarks>
-    public BuiltinExpressionNode(string name) : base(SourcePosition.None) => Name = name;
+    public BuiltinExpressionNode(string name, IReadOnlyList<ExpressionNode> arguments, SourcePosition position)
+        : base(position)
+    {
+        Name = name;
+        Arguments = arguments;
+    }
+    
+    /// <summary>
+    /// Gets the name of the built-in expression represented by this node.
+    /// The name uniquely identifies the specific built-in construct in the Cool language syntax.
+    /// </summary>
+    public string Name { get; }
+
+    /// <summary>
+    /// Gets the list of arguments associated with the built-in expression node.
+    /// Each argument is represented as an expression node and corresponds to the inputs
+    /// provided to the built-in construct during its evaluation.
+    /// </summary>
+    public IReadOnlyList<ExpressionNode> Arguments { get; }
 
     /// <summary>
     /// Accepts a visitor that implements the <see cref="ICoolSyntaxVisitor{T}"/> interface and

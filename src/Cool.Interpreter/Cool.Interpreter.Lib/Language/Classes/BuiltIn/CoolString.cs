@@ -38,7 +38,8 @@ public class CoolString : CoolObject
     /// as a `CoolInt` object.
     /// </summary>
     /// <returns>A `CoolInt` representing the number of characters in the string.</returns>
-    public CoolInt Length() => new(Value.Length);
+    public CoolInt Length() 
+        => new(Value.Length);
 
     /// <summary>
     /// Concatenates the current string with another CoolString instance and returns a new CoolString
@@ -46,7 +47,8 @@ public class CoolString : CoolObject
     /// </summary>
     /// <param name="other">The other CoolString instance to concatenate with the current string.</param>
     /// <returns>A CoolString instance representing the concatenated result of the current string and the input string.</returns>
-    public CoolString Concat(CoolString other) => new(Value + other.Value);
+    public CoolString Concat(CoolString other) 
+        => new(Value + other.Value);
 
     /// <summary>
     /// Extracts a substring from the current CoolString instance.
@@ -63,6 +65,7 @@ public class CoolString : CoolObject
     {
         if (start.Value < 0 || len.Value < 0 || start.Value + len.Value > Value.Length)
             throw new CoolRuntimeException("String.substr() out of range");
+        
         return new CoolString(Value.Substring(start.Value, len.Value));
     }
 
@@ -72,7 +75,8 @@ public class CoolString : CoolObject
     /// within the CoolString instance.
     /// </summary>
     /// <returns>The string value of the current CoolString object.</returns>
-    public override string AsString() => Value;
+    public override string AsString() 
+        => Value;
 
     /// <summary>
     /// Returns the string representation of the CoolString object. This representation
@@ -82,7 +86,8 @@ public class CoolString : CoolObject
     /// <returns>
     /// A string containing the CoolString value in its escaped and quoted form.
     /// </returns>
-    public override string ToString() => $"\"{Escape(Value)}\"";
+    public override string ToString() 
+        => $"\"{Escape(Value)}\"";
 
     /// <summary>
     /// Determines whether the specified object is equal to the current CoolString instance.
@@ -93,7 +98,8 @@ public class CoolString : CoolObject
     /// Returns <c>true</c> if the specified object is a CoolString and has the same string value;
     /// otherwise, <c>false</c>.
     /// </returns>
-    public override bool Equals(object? obj) => obj is CoolString s && Value == s.Value;
+    public override bool Equals(object? obj) 
+        => obj is CoolString s && Value == s.Value;
 
     /// <summary>
     /// Computes and returns the hash code for the CoolString instance.
@@ -103,7 +109,24 @@ public class CoolString : CoolObject
     /// <returns>
     /// An integer representing the hash code of the CoolString instance.
     /// </returns>
-    public override int GetHashCode() => Value.GetHashCode();
+    public override int GetHashCode() 
+        => Value.GetHashCode();
+
+    /// <summary>
+    /// Represents an empty string instance in the Cool programming language.
+    /// This static readonly member provides a reusable, predefined representation
+    /// of an empty <see cref="CoolString"/> object.
+    /// </summary>
+    public static readonly CoolString Empty = new("");
+
+    /// <summary>
+    /// Creates a new instance of <see cref="CoolString"/> from the provided value.
+    /// If the input value is null or empty, returns the predefined <see cref="Empty"/> instance.
+    /// </summary>
+    /// <param name="value">The input string value to create the <see cref="CoolString"/> instance from.</param>
+    /// <returns>A <see cref="CoolString"/> instance representing the given string value.</returns>
+    public static CoolString From(string value) =>
+        string.IsNullOrEmpty(value) ? Empty : new CoolString(value);
 
     /// <summary>
     /// Escapes special characters in a string for proper string representation in the Cool programming language.

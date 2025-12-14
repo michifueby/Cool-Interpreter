@@ -8,8 +8,11 @@
 
 namespace Cool.Interpreter.Lib.Language.Interpretation;
 
-using System.Collections.Immutable;
-using System.Runtime.InteropServices;
+using Cool.Interpreter.Lib.Core.Exeptions;
+using Cool.Interpreter.Lib.Core.Syntax;
+using Cool.Interpreter.Lib.Language.Classes;
+using Cool.Interpreter.Lib.Language.Classes.BuiltIn;
+using Cool.Interpreter.Lib.Language.Evaluation;
 using Cool.Interpreter.Lib.Core.Diagnostics;
 using Cool.Interpreter.Lib.Language.Analysis;
 using Cool.Interpreter.Lib.Language.Parsing;
@@ -38,16 +41,19 @@ public class CoolInterpreter : IInterpreter
     /// Interprets and executes a Cool program from the provided source code.
     /// </summary>
     /// <param name="sourceCode">
-    /// The Cool source code to interpret and execute.
+    /// The source code of the Cool program to be executed.
     /// </param>
     /// <param name="sourceName">
-    /// The name of the source, used for diagnostic messages. If null, a default value of "<string>" will be used.
+    /// An optional identifier for the source of the code, such as a file name. Defaults to "<string>" if not specified.
     /// </param>
     /// <returns>
-    /// An <see cref="InterpretationResult"/> representing the outcome of the interpretation and execution process, including diagnostics, output, and any returned value from the Cool program.
+    /// An <see cref="InterpretationResult"/> representing the result of the program execution, including diagnostics and output.
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    /// Thrown when the <paramref name="sourceCode"/> is null.
+    /// Thrown when the provided source code is null.
+    /// </exception>
+    /// <exception cref="NotImplementedException">
+    /// Thrown when the execution phase of the interpreter has not been implemented.
     /// </exception>
     public InterpretationResult Run(string sourceCode, string? sourceName = null)
     {
@@ -61,8 +67,8 @@ public class CoolInterpreter : IInterpreter
         {
             return InterpretationResult.Failure(
                 output: string.Empty,
-                returnedValue: null,
-                diagnostics: parseResult.Diagnostics);
+                diagnostics: [..parseResult.Diagnostics],
+                returnedValue: null);
         }
 
         // Phase 2: Semantic Analysis
@@ -73,12 +79,85 @@ public class CoolInterpreter : IInterpreter
         {
             return InterpretationResult.Failure(
                 output: string.Empty,
-                returnedValue: null,
-                diagnostics: semanticResult.Diagnostics);
+                diagnostics: [..semanticResult.Diagnostics],
+                returnedValue: null);
+        }
+        
+        var symbolTable = semanticResult.SymbolTable
+                          ?? throw new InvalidOperationException("Semantic analyzer returned null SymbolTable");
+        
+        // Phase 3: Build runtime environment with captured I/O
+        var outputBuffer = new StringWriter();
+        var runtimeEnv = new CoolRuntimeEnvironment(symbolTable)
+            .WithOutput(outputBuffer)
+            .WithInput(new StringReader("")); // no input by default
+        
+        CoolObject? returnedValue = null;
+        DiagnosticBag executionDiagnostics = new();
+
+        try
+        {
+            var evaluator = new CoolEvaluator(runtimeEnv);
+            returnedValue = evaluator.Evaluate(parseResult.SyntaxTree);
+        }
+        catch (CoolRuntimeException ex) when (ex.Message.Contains("division by zero"))
+        {
+            executionDiagnostics.ReportError(
+                SourcePosition.None,
+                ex.Message,
+                CoolErrorCodes.DivisionByZero);
+        }
+        catch (CoolRuntimeException ex) when (ex.Message.Contains("substr"))
+        {
+            executionDiagnostics.ReportError(
+                SourcePosition.None,
+                ex.Message,
+                CoolErrorCodes.SubstrOutOfRange);
+        }
+        catch (CoolRuntimeException ex) when (ex.Message.Contains("abort"))
+        {
+            executionDiagnostics.ReportError(
+                SourcePosition.None,
+                ex.Message,
+                CoolErrorCodes.AbortCalled);
+        }
+        catch (CoolRuntimeException ex)
+        {
+            // Generic runtime error from user code
+            executionDiagnostics.ReportError(
+                SourcePosition.None,
+                ex.Message,
+                CoolErrorCodes.RuntimeError);
+        }
+        catch (Exception ex)
+        {
+            // This should never happen — it's a bug in the interpreter
+            executionDiagnostics.ReportError(
+                SourcePosition.None,
+                $"Internal interpreter error: {ex.Message}",
+                CoolErrorCodes.InternalInterpreterError);
+        }
+        
+        // Phase 3: Return result
+        if (executionDiagnostics.HasErrors)
+        {
+            return InterpretationResult.Failure(
+                output: string.Empty,
+                diagnostics: [..parseResult.Diagnostics],
+                returnedValue: null);
         }
 
-        // Phase 3: Execute
-        throw new NotImplementedException();
+        string finalOutput = outputBuffer.ToString();
+        string resultString = returnedValue switch
+        {
+            CoolVoid => string.Empty,
+            null     => "null",
+            _        => returnedValue.ToString()
+        };
+
+        return InterpretationResult.Success(
+            output: finalOutput,
+            returnedValue: resultString);
     }
 
     /// <summary>

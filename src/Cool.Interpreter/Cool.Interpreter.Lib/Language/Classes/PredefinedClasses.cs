@@ -73,10 +73,10 @@ public static class PredefinedClasses
     /// Represents the predefined IO class in the Cool language, which provides methods
     /// for basic input and output operations.
     /// </summary>
-    public static readonly CoolClass IO = new(
-        name: "IO",
+    public static readonly CoolClass Io = new(
+        name: "Io",
         parent: Object,
-        methods: CreateIOMethods(),
+        methods: CreateIoMethods(),
         attributes: ImmutableDictionary<string, AttributeNode>.Empty);
 
     /// <summary>
@@ -89,7 +89,7 @@ public static class PredefinedClasses
             ["Int"]    = Int,
             ["String"] = String,
             ["Bool"]   = Bool,
-            ["IO"]     = IO
+            ["Io"]     = Io
         }.AsReadOnly();
 
     /// <summary>
@@ -140,7 +140,7 @@ public static class PredefinedClasses
     /// An immutable dictionary where the keys are the names of the predefined methods
     /// and the values are their corresponding `MethodNode` representations.
     /// </returns>
-    private static ImmutableDictionary<string, MethodNode> CreateIOMethods() =>
+    private static ImmutableDictionary<string, MethodNode> CreateIoMethods() =>
         ImmutableDictionary<string, MethodNode>.Empty
             .Add("out_string", BuiltinMethod("out_string", "SELF_TYPE", ("x", "String")))
             .Add("out_int",    BuiltinMethod("out_int",    "SELF_TYPE", ("x", "Int")))
@@ -175,8 +175,15 @@ public static class PredefinedClasses
             .Select(p => new FormalNode(p.Name, p.Type, SourcePosition.None))
             .ToImmutableArray();
 
-        // Marker node – the interpreter knows how to handle these built-ins
-        var body = new BuiltinExpressionNode(name);
+        // The body is a BuiltinExpressionNode that carries:
+        //   • the builtin name
+        //   • references to the formal parameters as arguments
+        var arguments = formals
+            .Select(f => new IdentifierExpressionNode(f.Name, SourcePosition.None))
+            .ToArray();
+
+        var body = new BuiltinExpressionNode(name, arguments, SourcePosition.None);
+
         return new MethodNode(name, formals, returnType, body, SourcePosition.None);
     }
 }
