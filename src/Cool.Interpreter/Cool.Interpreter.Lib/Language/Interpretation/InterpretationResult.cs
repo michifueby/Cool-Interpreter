@@ -23,7 +23,7 @@ public class InterpretationResult
     
     public IReadOnlyList<Diagnostic> Diagnostics { get; }
     
-    public bool IsSuccess => Diagnostics.All(d => d.Severity != DiagnosticSeverity.Error);
+    public bool IsSuccess => Diagnostics.All(d => d.Severity is not (DiagnosticSeverity.Error or DiagnosticSeverity.InternalError));
 
     private InterpretationResult(string output, CoolObject? returnedValue, IReadOnlyList<Diagnostic> diagnostics)
     {
