@@ -44,7 +44,7 @@ public static class ObjectFactory
     private static CoolUserObject CreateUserObject(CoolClass @class, CoolRuntimeEnvironment env)
     {
         var obj = new CoolUserObject(@class, env);
-        obj.Initialize(env);                 
+        obj.Initialize(env);
         return obj;
     }
 }

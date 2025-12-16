@@ -1,9 +1,9 @@
 //-----------------------------------------------------------------------
-// <copyright file="ObjectFactory.cs" company="FH Wiener Neustadt">
+// <copyright file="Environment.cs" company="FH Wiener Neustadt">
 //     Copyright (c) FH Wiener Neustadt. All rights reserved.
 // </copyright>
 // <author>Michael Füby, Armin Zimmerling, Mahmoud Ibrahim</author>
-// <summary>ObjectFactory</summary>
+// <summary>Environment</summary>
 //-----------------------------------------------------------------------
 
 namespace Cool.Interpreter.Lib.Language.Evaluation;
@@ -18,7 +18,7 @@ using Cool.Interpreter.Lib.Language.Classes.BuiltIn;
 /// Contains the current 'self' object and local variables (let, parameters, etc.).
 /// Thread-safe, pure functional, and designed for high-performance evaluation.
 /// </summary>
-public sealed class Environment
+public class Environment
 {
     /// <summary>
     /// Represents an immutable execution environment (frame) for the Cool
@@ -43,7 +43,11 @@ public sealed class Environment
     /// </summary>
     public ImmutableDictionary<string, CoolObject> Locals { get; }
 
-    
+    /// <summary>
+    /// Represents an empty instance of the environment with no local variables
+    /// and a self-reference set to a void object. This is a predefined static member
+    /// intended to be used as a default or initial state.
+    /// </summary>
     public static readonly Environment Empty = new(
         CoolVoid.Value,
         ImmutableDictionary<string, CoolObject>.Empty);
@@ -75,9 +79,16 @@ public sealed class Environment
             ? this
             : new Environment(Self, Locals.SetItem(name, value ?? CoolVoid.Value));
 
-    // --------------------------------------------------------------------
-    // Lookup
-    // --------------------------------------------------------------------
+    /// <summary>
+    /// Retrieves the value of the specified identifier from the current environment.
+    /// It first checks if the identifier is "self", then searches locals,
+    /// and finally attempts to retrieve an attribute from the 'self' object.
+    /// </summary>
+    /// <param name="name">The name of the identifier to look up.</param>
+    /// <returns>The object associated with the specified identifier.</returns>
+    /// <exception cref="CoolRuntimeException">
+    /// Thrown when the identifier is not found in the environment or the 'self' object does not contain the specified attribute.
+    /// </exception>
     public CoolObject Lookup(string name)
     {
         return name switch

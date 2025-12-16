@@ -21,58 +21,53 @@ using Cool.Interpreter.Lib.Core.Syntax;
 public class InheritanceChecker
 {
     /// <summary>
-    /// Represents the table used to store and manage symbols for classes in the semantic analysis phase.
-    /// This symbol table is used to track information about classes, such as their definitions and
-    /// inheritance relationships, during the first semantic pass of the program analysis. It enables
-    /// validation of class definitions, detection of duplicate class names, and resolution of inheritance
-    /// relationships. It also facilitates error reporting for issues such as undefined parent classes
-    /// and inheritance cycles.
+    /// Represents the symbol table used during the semantic analysis phase of the compiler.
+    /// It holds information about all registered classes, including built-in and user-defined ones,
+    /// for resolving class symbols, managing inheritance relationships, and detecting semantic errors.
+    /// This symbol table is a central component for storing and retrieving class symbols throughout
+    /// the compilation process, ensuring that all classes are correctly defined, their parent relationships
+    /// are valid, and potential inheritance cycles are identified and reported.
     /// </summary>
     private readonly SymbolTable _symbolTable;
 
     /// <summary>
-    /// Stores and manages diagnostic messages, including errors, warnings, and informational messages,
-    /// encountered during semantic analysis. This diagnostic bag is used to report issues such as
-    /// duplicate class declarations, invalid inheritance relationships, or missing required classes (e.g., Main).
-    /// It ensures that all detected problems are collected in a consistent manner for later retrieval
-    /// and presentation to the user.
+    /// A collection of diagnostics used to record errors, warnings, and informational messages
+    /// during the semantic analysis phase of the compiler. This bag is essential for capturing information
+    /// about issues such as duplicate class definitions, redefinitions of built-in classes, improper inheritance
+    /// relationships, and missing or malformed program components. These diagnostics help in identifying
+    /// and reporting semantic issues critical for ensuring program correctness.
     /// </summary>
     private readonly DiagnosticBag _diagnostics;
 
     /// <summary>
-    /// Represents the collection of all class names defined in the program during the first semantic pass.
-    /// This set is used to track and validate user-defined classes, ensuring they are uniquely named,
-    /// not redefined, and correctly referenced in the inheritance hierarchy.
-    /// It aids in detecting errors such as duplicate class definitions, missing Main class, and invalid
-    /// inheritance relationships.
+    /// A collection that stores the set of all classes defined within a Cool program during the first
+    /// semantic analysis pass. This set is used to detect duplicate class definitions, ensure that
+    /// all parent classes are defined, and validate the inheritance graph.
+    /// The stored class names include only user-defined classes and exclude built-in classes.
     /// </summary>
     private readonly HashSet<string> _definedClasses = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// Represents a mapping between class names and their parent class names in the inheritance graph.
-    /// Each entry in the map associates a class with its parent class, if defined. If a class does not
-    /// explicitly inherit from another class, its parent value may be null. This structure is used to
-    /// validate inheritance relationships, detect undefined parent classes, ensure proper hierarchy,
-    /// and identify inheritance cycles during the semantic analysis phase of a COOL program.
+    /// Maintains a mapping of class names to their respective parent class names
+    /// within the inheritance graph of the language. This dictionary is used to track
+    /// parent-child relationships between classes during the semantic analysis phase
+    /// to validate inheritance structures, detect inheritance cycles, and ensure
+    /// that all parent classes are properly defined.
+    /// A class may not have a parent, in which case the value will be null.
     /// </summary>
     private readonly Dictionary<string, string?> _classParentMap = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// Represents the set of built-in classes that are inherently available in the language.
-    /// These classes are considered fundamental and include "Object", "IO", "Int", "String",
-    /// and "Bool". This set is used during semantic analysis to enforce rules such as
-    /// preventing redefinition of built-in classes, disallowing inheritance from primitive
-    /// types except for specific cases, and validating the inheritance hierarchy.
+    /// Represents the set of built-in classes that are predefined and essential for the
+    /// language's runtime and type system. These classes include core entities such as "Object", "IO",
+    /// "Int", "String", and "Bool", serving as the foundation for user-defined class hierarchies
+    /// and ensuring consistent behavior. This set is used during the semantic analysis phase
+    /// to validate inheritance relationships, prevent redefinitions, and enforce proper usage
+    /// of built-in types.
     /// </summary>
     private static readonly ImmutableHashSet<string> BasicClasses =
         ImmutableHashSet.Create(StringComparer.Ordinal, "Object", "IO", "Int", "String", "Bool");
 
-    /// <summary>
-    /// Performs checking and validation of inheritance relationships in the
-    /// provided abstract syntax tree. The class is responsible for building
-    /// an inheritance graph and detecting potential issues such as inheritance
-    /// cycles or invalid inheritance chains.
-    /// </summary>
     public InheritanceChecker(SymbolTable symbolTable, DiagnosticBag diagnostics)
     {
         _symbolTable = symbolTable ?? throw new ArgumentNullException(nameof(symbolTable));
@@ -80,50 +75,74 @@ public class InheritanceChecker
     }
 
     /// <summary>
-    /// Registers all classes defined in the program and validates their inheritance relationships.
-    /// It checks for duplicate class definitions, redefinitions of built-in classes, invalid
-    /// inheritance from primitive types, and ensures the presence of a "Main" class.
+    /// Registers all classes defined in the given program, performing validations for duplicate
+    /// definitions, redefinitions of built-in classes, and invalid inheritance from primitive
+    /// types. Updates and returns an updated symbol table with the added classes if all checks
+    /// succeed. Also ensures the presence of a "Main" class in the program.
     /// </summary>
-    /// <param name="program">The root node of the program's abstract syntax tree, containing
-    /// all class definitions to be registered and validated.</param>
-    public void RegisterClasses(ProgramNode program)
+    /// <param name="program">
+    /// The abstract syntax tree representation of the program containing the classes to be registered.
+    /// </param>
+    /// <returns>
+    /// An updated instance of the symbol table that includes all successfully registered classes.
+    /// </returns>
+    public SymbolTable RegisterClasses(ProgramNode program)
     {
+        var currentTable = _symbolTable;  // starts with built-ins only
+
         foreach (var classNode in program.Classes)
         {
-            var className = classNode.Name;
-            var parentName = classNode.InheritsFrom;
-            var location = classNode.Location;
+            var className   = classNode.Name;
+            var parentName  = classNode.InheritsFrom;
+            var location    = classNode.Location;
 
+            // Duplicate class?
             if (_definedClasses.Contains(className))
             {
-                _diagnostics.ReportError(location, CoolErrorCodes.DuplicateClass, $"Class '{className}' is already defined.");
+                _diagnostics.ReportError(location, CoolErrorCodes.DuplicateClass,
+                    $"Class '{className}' is already defined.");
                 continue;
             }
 
+            // Redefining built-in?
             if (BasicClasses.Contains(className))
             {
-                _diagnostics.ReportError(location, CoolErrorCodes.RedefineBuiltin, $"Cannot redefine built-in class '{className}'.");
+                _diagnostics.ReportError(location, CoolErrorCodes.RedefineBuiltin,
+                    $"Cannot redefine built-in class '{className}'.");
                 continue;
             }
 
-            if (parentName is not null && BasicClasses.Contains(parentName) && parentName != "Object" && parentName != "IO")
+            // Inheriting from primitive (Int/String/Bool)?
+            if (parentName is not null &&
+                BasicClasses.Contains(parentName) &&
+                parentName != "Object" && parentName != "IO")
             {
-                _diagnostics.ReportError(location, CoolErrorCodes.InheritFromPrimitive, $"Class '{className}' cannot inherit from primitive type '{parentName}'.");
+                _diagnostics.ReportError(location, CoolErrorCodes.InheritFromPrimitive,
+                    $"Class '{className}' cannot inherit from primitive type '{parentName}'.");
                 continue;
             }
 
+            // All checks passed — register the class
             _definedClasses.Add(className);
             _classParentMap[className] = parentName;
 
-            // Save the ClassNode so we can get location later
-            var classSymbol = new ClassSymbol(className, parentName);
-            _symbolTable.WithClass(classSymbol);
+            var classSymbol = new ClassSymbol(
+                name: className,
+                parentName: parentName,
+                definition: classNode,
+                location: location);
+
+            currentTable = currentTable.WithClass(classSymbol);
         }
 
+        // Check for missing Main class
         if (!_definedClasses.Contains("Main"))
         {
-            _diagnostics.ReportError(SourcePosition.None, CoolErrorCodes.MissingMain, "Program must contain a class named 'Main'.");
+            _diagnostics.ReportError(SourcePosition.None, CoolErrorCodes.MissingMain,
+                "Program must contain a class named 'Main'.");
         }
+
+        return currentTable;
     }
 
     /// <summary>

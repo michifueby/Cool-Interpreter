@@ -30,29 +30,29 @@ public static class RuntimeClassFactory
     /// <returns>A fully constructed <see cref="CoolClass"/> with its parents, methods, and attributes resolved.</returns>
     public static CoolClass FromSymbol(ClassSymbol symbol, CoolRuntimeEnvironment env)
     {
-        // Resolve parent recursively (null for Object, otherwise recurse)
+        // Fast path: if it's a predefined built-in class, return the shared instance
+        if (PredefinedClasses.ByName.TryGetValue(symbol.Name, out var predefinedClass))
+        {
+            return predefinedClass;
+        }
+
+        // Otherwise, it's a user-defined class — build it from the symbol
+
+        // Resolve parent recursively
         CoolClass? parent = symbol.ParentName switch
         {
-            null or "Object" =>  null,
+            null or "Object" => PredefinedClasses.Object,  // Main inherits from Object implicitly
             var p => FromSymbol(env.SymbolTable.GetClass(p)!, env)
         };
 
-        if (parent is null)
-            return null;
-
-        // Extract MethodNodes from the AST stored in ClassSymbol.Definition
+        // Extract methods and attributes from the AST definition
         var methods = symbol.Definition.Features
             .OfType<MethodNode>()
-            .ToImmutableDictionary(
-                method => method.Name,           // key
-                method => method);               // value (MethodNode itself)
+            .ToImmutableDictionary(m => m.Name, m => m);
 
-        // Extract AttributeNodes
         var attributes = symbol.Definition.Features
             .OfType<AttributeNode>()
-            .ToImmutableDictionary(
-                attr => attr.Name,
-                attr => attr);
+            .ToImmutableDictionary(a => a.Name, a => a);
 
         return new CoolClass(
             name: symbol.Name,

@@ -70,6 +70,13 @@ public class CoolInterpreter : IInterpreter
                 diagnostics: [..parseResult.Diagnostics],
                 returnedValue: null);
         }
+        else if (parseResult.HasErrors)
+        {
+            return InterpretationResult.Failure(
+                output: string.Empty,
+                diagnostics: [..parseResult.Diagnostics],
+                returnedValue: null);
+        }
 
         // Phase 2: Semantic Analysis
         var diagnostics = new DiagnosticBag();

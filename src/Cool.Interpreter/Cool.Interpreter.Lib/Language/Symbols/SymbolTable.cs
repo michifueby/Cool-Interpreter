@@ -6,11 +6,10 @@
 // <summary>SymbolTable</summary>
 //-----------------------------------------------------------------------
 
-using Cool.Interpreter.Lib.Core.Syntax;
-
 namespace Cool.Interpreter.Lib.Language.Symbols;
 
 using System.Collections.Immutable;
+using Cool.Interpreter.Lib.Core.Syntax;
 
 /// <summary>
 /// Represents a table that stores and manages class symbols within a symbol table for semantic analysis.
@@ -23,7 +22,7 @@ using System.Collections.Immutable;
 /// Immutable symbol table containing class definitions.
 /// Thread-safe, pure, and designed for functional-style semantic analysis.
 /// </summary>
-public sealed class SymbolTable
+public class SymbolTable
 {
     /// <summary>
     /// The empty symbol table — contains only built-in classes (Object, IO, Int, String, Bool).
@@ -35,6 +34,10 @@ public sealed class SymbolTable
     /// </summary>
     public ImmutableDictionary<string, ClassSymbol> Classes { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SymbolTable"/> class.
+    /// </summary>
+    /// <param name="classes"></param>
     private SymbolTable(ImmutableDictionary<string, ClassSymbol> classes)
     {
         Classes = classes;
@@ -42,16 +45,13 @@ public sealed class SymbolTable
 
     /// <summary>
     /// Creates a new symbol table with an additional class.
-    /// Throws if the class already exists (use WithClassOrUpdate for overrides).
+    /// Throws if the class already exists.
     /// </summary>
     public SymbolTable WithClass(ClassSymbol classSymbol)
     {
-        if (classSymbol is null) throw new ArgumentNullException(nameof(classSymbol));
-        if (Classes.ContainsKey(classSymbol.Name))
-            throw new InvalidOperationException($"Class '{classSymbol.Name}' is already defined.");
+        ArgumentNullException.ThrowIfNull(classSymbol);
 
-        return new SymbolTable(
-            Classes.SetItem(classSymbol.Name, classSymbol));
+        return Classes.ContainsKey(classSymbol.Name) ? throw new InvalidOperationException($"Class '{classSymbol.Name}' is already defined.") : new SymbolTable(Classes.SetItem(classSymbol.Name, classSymbol));
     }
 
     /// <summary>
@@ -64,13 +64,7 @@ public sealed class SymbolTable
     /// Gets a class symbol by name. Throws if not found.
     /// </summary>
     public ClassSymbol GetClass(string name) =>
-        TryGetClass(name)
-        ?? throw new KeyNotFoundException($"Class '{name}' not found in symbol table.");
-
-    /// <summary>
-    /// Checks if a class exists in the table.
-    /// </summary>
-    public bool HasClass(string name) => Classes.ContainsKey(name);
+        TryGetClass(name) ?? throw new KeyNotFoundException($"Class '{name}' not found in symbol table.");
 
     // --------------------------------------------------------------------
     // Private: Build the initial table with built-in classes
@@ -79,7 +73,7 @@ public sealed class SymbolTable
     {
         var builder = ImmutableDictionary.CreateBuilder<string, ClassSymbol>(StringComparer.Ordinal);
 
-        // Built-in classes — these are part of every Cool program
+        // Built-in classes — no AST definition available (and not needed)
         AddBuiltin(builder, "Object");
         AddBuiltin(builder, "IO", "Object");
         AddBuiltin(builder, "Int", "Object");
@@ -89,8 +83,19 @@ public sealed class SymbolTable
         return new SymbolTable(builder.ToImmutable());
     }
 
-    private static void AddBuiltin(ImmutableDictionary<string, ClassSymbol>.Builder builder, string name, string? parent = null)
+    /// <summary>
+    /// Adds a built-in class to the given symbol table builder.
+    /// </summary>
+    /// <param name="builder">The builder for the immutable dictionary of classes.</param>
+    /// <param name="name">The name of the built-in class to add.</param>
+    /// <param name="parent">The name of the parent class for the built-in class, or null if there is no parent.</param>
+    private static void AddBuiltin(
+        ImmutableDictionary<string, ClassSymbol>.Builder builder,
+        string name,
+        string? parent = null)
     {
+        // Use the parameterless constructor (which now delegates to the main one with Definition = null!)
+        // This is safe for built-ins because RuntimeClassFactory will short-circuit them anyway.
         var symbol = new ClassSymbol(name, parent, SourcePosition.None);
         builder.Add(name, symbol);
     }

@@ -64,7 +64,7 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
                               ?? throw new CoolRuntimeException("No class Main found");
 
         // 2. Find the main() method (must have 0 parameters)
-        var mainMethodNode = mainClassSymbol.Definition.Features
+        var mainMethodNode = mainClassSymbol.Definition!.Features
                                  .OfType<MethodNode>()
                                  .FirstOrDefault(m => m.Name == "main" && m.Formals.Count == 0)
                              ?? throw new CoolRuntimeException("main() method not found or has parameters");

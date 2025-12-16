@@ -42,7 +42,7 @@ public class CoolSemanticAnalyzer : ISemanticAnalyzer
 
         // Phase 1: Register user-defined classes + basic validation
         var inheritanceChecker = new InheritanceChecker(symbolTable, diagnostics);
-        inheritanceChecker.RegisterClasses(syntaxTree);
+        symbolTable = inheritanceChecker.RegisterClasses(syntaxTree);
 
         // Early exit if basic errors (duplicate class, redefine builtin, etc.)
         if (diagnostics.HasErrors)
@@ -51,7 +51,7 @@ public class CoolSemanticAnalyzer : ISemanticAnalyzer
         }
 
         // Phase2: Build full inheritance graph and detect cycles
-        inheritanceChecker.CheckInheritanceGraph();       // reports COOL0106 if cycle found
+        inheritanceChecker.CheckInheritanceGraph(); // Reports COOL0106 if cycle found
 
         if (diagnostics.HasErrors)
         {
