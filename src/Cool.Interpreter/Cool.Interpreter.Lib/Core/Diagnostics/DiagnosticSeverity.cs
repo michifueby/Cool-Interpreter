@@ -13,12 +13,12 @@ namespace Cool.Interpreter.Lib.Core.Diagnostics;
 /// </summary>
 public enum DiagnosticSeverity
 {
-    /// <summary>Internal error.</summary>
-    InternalError = 0,
     /// <summary>Informational messages and hints.</summary>
     Info = 1,
     /// <summary>Warnings — do not prevent execution.</summary>
     Warning = 2,
     /// <summary>Errors — prevent successful compilation/interpretation.</summary>
-    Error = 3
+    Error = 3, 
+    /// <summary>Internal error.</summary>
+    InternalError = 4
 }

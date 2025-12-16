@@ -94,7 +94,7 @@ public class Diagnostic
     /// <param name="message">The diagnostic message description.</param>
     /// <returns>A new instance of the <see cref="Diagnostic"/> class representing an internal diagnostic.</returns>
     public static Diagnostic Internal(SourcePosition location, string code, string message)
-        => new(DiagnosticSeverity.Info, code, message, location);
+        => new(DiagnosticSeverity.InternalError, code, message, location);
 
     /// <summary>
     /// Returns a complete string suitable for console or IDE output.
@@ -104,6 +104,7 @@ public class Diagnostic
     {
         var severityText = Severity switch
         {
+            DiagnosticSeverity.InternalError => "internal error",
             DiagnosticSeverity.Error => "error",
             DiagnosticSeverity.Warning => "warning",
             DiagnosticSeverity.Info => "info",
