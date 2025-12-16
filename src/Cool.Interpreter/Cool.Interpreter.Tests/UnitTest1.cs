@@ -1,9 +1,11 @@
-﻿using Antlr4.Runtime;
+﻿using System.Text.RegularExpressions;
+using Antlr4.Runtime;
+using Cool.Interpreter.Lib.Language.Interpretation;
 using NUnit.Framework;
 
 namespace Cool.Interpreter.Tests;
 
-public class Tests
+public partial class Tests
 {
     
     private static readonly Dictionary<string, string> TestCases = [];
@@ -13,25 +15,83 @@ public class Tests
     {
     }
 
-    [Test]
-    public void Test1()
+
+    private static int EvaluateResult(string result)
     {
-        Assert.Pass();
+        var match = EvaluateParseResultRegex().Match(result);
+        return result.Contains("failed with") || result.Contains("error") ? 0 : int.Parse(match.Value);
     }
     
+    /// <summary>
+    /// Expected result is greater than 0 indicating successful parse and execution
+    /// </summary>
     [Test]
-    public void ManualTest()
+    public void TestSingleParseSuccess()
     {
-        var cat = "Algorithm";
+        var input = File.ReadAllText("TestCases/Parsing/success/abort.cl");
+        var result = RunInterpreter(input);
+        Console.WriteLine("Result: " + result);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(EvaluateResult(result.ToString()), Is.GreaterThan(0));
+            Assert.That(result.IsSuccess, Is.True);
+        });
+    }
+    
+    /// <summary>
+    /// Expected result is 0 due to parse failure or a number of errors
+    /// </summary>
+    [Test]
+    public void TestSingleParseFail()
+    {
+        var input = File.ReadAllText("TestCases/Parsing/fail/baddispatch2.cl");
+        var result = RunInterpreter(input);
+        Console.WriteLine("Result: " + result);
+        Assert.Multiple(() =>
+        {
+            Assert.That(EvaluateResult(result.ToString()), Is.EqualTo(0));
+            Assert.That(result.IsSuccess, Is.False);
+        });
+    }
+    
+    /// <summary>
+    /// Automatic testing of all test cases in a given category ["Algorithm", "Parsing", "Semantics"]
+    /// </summary>
+    [Test]
+    public void AutomaticTesting()
+    {
+        const string cat = "Parsing";
         var testCases = LoadTestCaseByCategory(cat);
         foreach (var testCase in testCases)
         {
-            var input = File.ReadAllText(testCase.Key);
-            var expectedResult = testCase.Value == "success" ? 0 : -1;
-            var actualResult = RunInterpreter(input);
-            Console.WriteLine($"Test case: {testCase}, result: {actualResult}, expected: {expectedResult}");
+            // during debugging: switch between only successful or failing cases
+            // if (testCase.Value.Contains("success")) continue;
             
-            // Assert.That(expectedResult, Is.EqualTo(actualResult));
+            Console.Write("Running test case: " + testCase.Key);
+            
+            var input = File.ReadAllText(testCase.Key);
+            var expectedResult = testCase.Value == "success";
+            var actualResult = RunInterpreter(input);
+            
+            Assert.Multiple(() =>
+            {
+                switch (expectedResult)
+                {
+                    case false:
+                        Assert.That(EvaluateResult(actualResult.ToString()), Is.EqualTo(0), 
+                            $"Test case '{testCase.Key}' expected to fail.\nResult: {actualResult}");
+                        Assert.That(actualResult.IsSuccess, Is.False);
+                        Console.WriteLine(" - Passed");
+                        break;
+                    case true:
+                        Assert.That(EvaluateResult(actualResult.ToString()), Is.GreaterThan(0), 
+                            $"Test case '{testCase.Key}' expected to succeed. \nResult: {actualResult}");
+                        // Assert.That(actualResult.IsSuccess, Is.True);
+                        Console.WriteLine(" - Passed");
+                        break;
+                }
+            });
         }
     }
     
@@ -53,18 +113,12 @@ public class Tests
         return TestCases;
     }
     
-    private static int RunInterpreter(string input)
+    private static InterpretationResult RunInterpreter(string input)
     {
         try
         {
-            var stream = CharStreams.fromString(input);
-            var lexer = new CoolLexer(stream);
-            var tokens = new CommonTokenStream(lexer);
-            var parser = new CoolParser(tokens);
-            var tree = parser.program();
-            
-            var visitor = new CoolBaseVisitor<int>(); // TODO: Replace with actual interpreter visitor
-            return visitor.Visit(tree);
+            var visitor = new CoolInterpreter();
+            return visitor.Run(input);
         }
         catch (Exception ex)
         {
@@ -73,4 +127,11 @@ public class Tests
             throw;
         }
     }
+
+    /// <summary>
+    /// Get the number of output characters for successful parsing or 0 if failed
+    /// </summary>
+    /// <returns></returns>
+    [GeneratedRegex(@"(?<=Output length:\s)\d+|(?<=failed with )\d+")]
+    private static partial Regex EvaluateParseResultRegex();
 }
