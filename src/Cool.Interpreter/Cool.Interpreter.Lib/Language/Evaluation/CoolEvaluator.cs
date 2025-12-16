@@ -82,11 +82,19 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
         return mainMethodNode.Body.Accept(this);
     }
 
+    /// <summary>
+    /// Evaluates a given expression node within a specified environment and returns the resulting <see cref="CoolObject"/>.
+    /// Temporarily changes the current environment to the supplied one for the duration of the evaluation,
+    /// reverting back to the original environment once the evaluation is complete.
+    /// </summary>
+    /// <param name="expr">The expression node to be evaluated.</param>
+    /// <param name="newEnv">The new environment context in which the expression will be evaluated.</param>
+    /// <returns>The <see cref="CoolObject"/> resulting from the evaluation of the expression.</returns>
     private CoolObject StartEvaluation(ExpressionNode expr, Environment newEnv)
     {
         var old = _env;
         _env = newEnv;
-        
+
         try
         {
             return expr.Accept(this);
@@ -205,23 +213,40 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     /// or if an error occurs during method invocation.</exception>
     public CoolObject Visit(DispatchNode node)
     {
-        /*
-        var receiver = node.Caller.Accept(this);
-        var args = node.Arguments.Select(a => a.Accept(this)).ToArray();
+        // 1. Evaluate the receiver (the object on which the method is called)
+        CoolObject receiver = node.Caller.Accept(this)
+                              ?? throw new CoolRuntimeException("Dispatch receiver evaluated to void");
 
-        var targetClass = node.StaticTypeName is null
-            ? receiver.Class
-            : RuntimeClassFactory.FromSymbol(_runtime.SymbolTable.GetClass(node.StaticTypeName)!, _runtime);
+        // 2. Evaluate all actual arguments
+        CoolObject[] actualArgs = node.Arguments
+            .Select(arg => arg.Accept(this)
+                           ?? throw new CoolRuntimeException("Argument evaluated to void"))
+            .ToArray();
 
-        var method = targetClass.Methods.Where(m => m.Key == node.MethodName && m.Value.Formals.Count == args.Length)
-            ?? throw new CoolRuntimeException($"Method {node.MethodName}/{args.Length} not found");
+        // 3. Determine the starting class for method lookup
+        CoolClass lookupStartClass = node.StaticTypeName is null
+            ? receiver.Class                                                  // Dynamic dispatch: start from runtime class
+            : ResolveStaticDispatchClass(node.StaticTypeName);                 // Static dispatch: use explicit type
 
-        var frame = Environment.Empty.WithSelf(receiver);
-        for (int i = 0; i < args.Length; i++)
-            frame = frame.WithLocal(method[i].Name, args[i]);
+        // 4. Find the method in the inheritance chain
+        MethodNode? method = FindMethodInHierarchy(lookupStartClass, node.MethodName, actualArgs.Length)
+                             ?? throw new CoolRuntimeException(
+                                 $"Method '{node.MethodName}' with {actualArgs.Length} argument(s) not found in class '{lookupStartClass.Name}' or its ancestors");
 
-        return StartEvaluation(method.Body, frame);*/
-        throw new NotImplementedException();
+        // 5. Build the activation frame:
+        //    - self = receiver
+        //    - bind formals to actual arguments
+        Environment activationFrame = Environment.Empty.WithSelf(receiver);
+
+        for (int i = 0; i < method.Formals.Count; i++)
+        {
+            string formalName = method.Formals[i].Name;
+            CoolObject argValue = actualArgs[i];
+            activationFrame = activationFrame.WithLocal(formalName, argValue);
+        }
+
+        // 6. Execute the method body in the new frame
+        return StartEvaluation(method.Body, activationFrame);
     }
 
     /// <summary>
@@ -477,6 +502,41 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
         a is CoolString sa && b is CoolString sb ? sa.Value == sb.Value :
         a is CoolBool ba && b is CoolBool bb ? ba.Value == bb.Value :
         ReferenceEquals(a, b);
+    
+    /// <summary>
+    /// Searches for a method by name and arity in the class hierarchy, starting from the given class
+    /// and walking up the inheritance chain.
+    /// </summary>
+    /// <returns>The MethodNode if found; otherwise null.</returns>
+    private MethodNode? FindMethodInHierarchy(CoolClass startClass, string methodName, int arity)
+    {
+        CoolClass? current = startClass;
+
+        while (current is not null)
+        {
+            if (current.Methods.TryGetValue(methodName, out MethodNode? method) &&
+                method.Formals.Count == arity)
+            {
+                return method;
+            }
+
+            current = current.Parent;
+        }
+
+        return null;
+    }
+    
+    /// <summary>
+    /// Resolves a class by name for static dispatch. Throws if the class is not found.
+    /// </summary>
+    private CoolClass ResolveStaticDispatchClass(string typeName)
+    {
+        var classSymbol = _runtime.SymbolTable.TryGetClass(typeName);
+        if (classSymbol is null)
+            throw new CoolRuntimeException($"Static dispatch type '{typeName}' not found");
+
+        return RuntimeClassFactory.FromSymbol(classSymbol, _runtime);
+    }
 
     /// <summary>
     /// Determines whether a class, represented by its name, conforms to another class in the inheritance hierarchy.

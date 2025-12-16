@@ -29,7 +29,7 @@ public partial class Tests
     public void TestSingleParseSuccess()
     {
         var input = File.ReadAllText("TestCases/Parsing/success/abort.cl");
-        var result = RunInterpreter(input);
+        var result = RunInterpreter(input, Path.GetFileNameWithoutExtension(input));
         Console.WriteLine("Result: " + result);
 
         Assert.Multiple(() =>
@@ -46,7 +46,7 @@ public partial class Tests
     public void TestSingleParseFail()
     {
         var input = File.ReadAllText("TestCases/Parsing/fail/baddispatch2.cl");
-        var result = RunInterpreter(input);
+        var result = RunInterpreter(input, Path.GetFileNameWithoutExtension(input));
         Console.WriteLine("Result: " + result);
         Assert.Multiple(() =>
         {
@@ -113,12 +113,12 @@ public partial class Tests
         return TestCases;
     }
     
-    private static InterpretationResult RunInterpreter(string input)
+    private static InterpretationResult RunInterpreter(string input, string? sourceName = null)
     {
         try
         {
-            var visitor = new CoolInterpreter();
-            return visitor.Run(input);
+            var interpreter = new CoolInterpreter();
+            return interpreter.Run(input, sourceName);
         }
         catch (Exception ex)
         {

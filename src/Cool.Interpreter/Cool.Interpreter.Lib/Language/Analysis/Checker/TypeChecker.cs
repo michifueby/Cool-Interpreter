@@ -344,33 +344,58 @@ public class TypeChecker
 
         foreach (var binding in node.Bindings)
         {
-            // Determine type of initializer (or default if none)
-            var initializerType = binding.Initializer is null
-                ? DeterminateDefaultType(binding.TypeName)
-                : GetExpressionType(binding.Initializer);
+            string declaredType = binding.TypeName;           // may be null if omitted
+            string? initializerType = null;
 
-            // Check: initializer must conform to declared type
-            if (!IsTypeCompatible(initializerType, binding.TypeName))
+            if (binding.Initializer is not null)
             {
-                _diagnostics.ReportError(binding.Location, CoolErrorCodes.LetBindingTypeMismatch,
-                    $"Let variable '{binding.Identifier}' declared as '{binding.TypeName}', " +
-                    $"but initialized with expression of type '{initializerType}'");
+                initializerType = GetExpressionType(binding.Initializer);
+
+                if (declaredType is not null && !IsTypeCompatible(initializerType, declaredType))
+                {
+                    _diagnostics.ReportError(binding.Location,
+                        CoolErrorCodes.LetBindingTypeMismatch,
+                        $"Let variable '{binding.Identifier}' declared as '{declaredType}', " +
+                        $"but initialized with expression of type '{initializerType}'");
+                }
             }
 
-            // Add to scope (shadowing is allowed in Cool)
-            builder[binding.Identifier] = binding.TypeName;
+            // Determine the actual type of the binding
+            string bindingType = declaredType
+                                 ?? initializerType
+                                 ?? DeterminateDefaultTypeForDeclaredOrError(binding); // only if declared
+
+            // If no type and no initializer → error (not allowed in Cool)
+            if (declaredType is null && initializerType is null)
+            {
+                _diagnostics.ReportError(binding.Location,
+                    CoolErrorCodes.LetNoTypeNoInit,
+                    $"Let variable '{binding.Identifier}' has no type declaration and no initializer");
+                bindingType = "Object"; // recover
+            }
+
+            // Add to scope
+            builder[binding.Identifier] = bindingType;
         }
 
-        // Update scope for body
         _localVariables = builder.ToImmutable();
 
-        // Type of let is type of its body
-        var bodyType = GetExpressionType(node.Body);
+        // Type of let = type of body
+        string bodyType = GetExpressionType(node.Body);
 
-        // Restore previous scope
+        // Restore scope
         _localVariables = previousLocals;
 
         return bodyType;
+    }
+    
+    private string DeterminateDefaultTypeForDeclaredOrError(LetBindingNode binding)
+    {
+        if (binding.TypeName is not null)
+            return DeterminateDefaultType(binding.TypeName);
+
+        // Should not reach here — already checked above
+        return "Object";
     }
 
     /// <summary>
@@ -529,5 +554,14 @@ public class TypeChecker
     /// </summary>
     /// <param name="typeName">The name of the type to evaluate for a default type.</param>
     /// <returns>The default type corresponding to the given type name.</returns>
-    private string DeterminateDefaultType(string typeName) => typeName is "Int" or "String" or "Bool" ? typeName : "Object";
+    private string DeterminateDefaultType(string typeName)
+    {
+        return typeName switch
+        {
+            "Int"    => "Int",
+            "String" => "String",
+            "Bool"   => "Bool",
+            _        => "Object"
+        };
+    }
 }

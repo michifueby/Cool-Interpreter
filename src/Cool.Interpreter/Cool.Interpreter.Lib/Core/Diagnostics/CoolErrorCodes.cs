@@ -72,6 +72,13 @@ public static class CoolErrorCodes
     public const string MethodReturnTypeMismatch = "COOL0202"; // Method 'f' should return T, but body has type S
 
     /// <summary>
+    /// Represents the error code "COOL0203" used to indicate
+    /// that a let-binding is declared without specifying a type
+    /// and without an initializer in the Cool programming language.
+    /// </summary>
+    public const string LetNoTypeNoInit = "COOL0203";
+
+    /// <summary>
     /// Represents the error code "COOL0210" used to indicate
     /// that a value of one type is being assigned to a variable
     /// of an incompatible or incorrect type in the Cool programming language.
