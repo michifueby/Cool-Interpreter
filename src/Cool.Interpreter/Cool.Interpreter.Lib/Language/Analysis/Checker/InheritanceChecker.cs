@@ -126,7 +126,50 @@ public class InheritanceChecker
     /// </summary>
     public void CheckInheritanceGraph()
     {
-        throw new NotImplementedException();
+        // 1. Check for undefined parents
+        foreach (var (className, parentName) in _classParentMap)
+        {
+            if (parentName is null)
+                continue;
+
+            if (!_definedClasses.Contains(parentName) && !IsBasicClass(parentName))
+            {
+                _diagnostics.ReportError(
+                    SourcePosition.None,
+                    "COOL0104",
+                    $"Class '{className}' inherits from undefined class '{parentName}'.");
+            }
+        }
+        // 2. Check for inheritance cycles
+        var visited = new HashSet<string>();
+        var recursionStack = new HashSet<string>();
+        foreach (var className in _definedClasses.Where(className => DetectCycle(className, visited, recursionStack)))
+        {
+            _diagnostics.ReportError(
+                SourcePosition.None,
+                "COOL0105",
+                $"Inheritance cycle detected involving class '{className}'.");
+        }
+    }
+
+    private bool DetectCycle(string className, HashSet<string> visited, HashSet<string> recursionStack)
+    {
+        if (recursionStack.Contains(className))
+            return true;
+
+        if (!visited.Add(className))
+            return false;
+
+        recursionStack.Add(className);
+
+        if (_classParentMap.TryGetValue(className, out var parentName) && parentName is not null)
+        {
+            if (DetectCycle(parentName, visited, recursionStack))
+                return true;
+        }
+
+        recursionStack.Remove(className);
+        return false;
     }
 
     private static bool IsBasicClass(string name) =>

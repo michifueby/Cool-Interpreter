@@ -78,7 +78,13 @@ public class CoolInterpreter : IInterpreter
         }
 
         // Phase 3: Execute
-        throw new NotImplementedException();
+        // throw new NotImplementedException();
+        
+        // Temporary stub implementation for execution phase
+        var output = "Execution phase is not yet implemented.";
+        return InterpretationResult.Success(
+            output: output,
+            returnedValue: null);
     }
 
     /// <summary>

@@ -60,6 +60,7 @@ public class CoolSemanticAnalyzer : ISemanticAnalyzer
             ? SemanticResult.Failure(diagnostics.Diagnostics)
             : SemanticResult.Success(symbolTable, diagnostics.Diagnostics);*/
         
-        throw new NotImplementedException();
+        // throw new NotImplementedException();
+        return SemanticResult.Success(symbolTable, diagnostics.Diagnostics); // temporary solution
     }
 }
