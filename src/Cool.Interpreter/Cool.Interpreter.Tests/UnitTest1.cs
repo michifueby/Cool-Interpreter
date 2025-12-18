@@ -10,9 +10,31 @@ public partial class Tests
     
     private static readonly Dictionary<string, string> TestCases = [];
     
+    private const string TestFilesRoot = "TestCases";
+
+    private CoolInterpreter _interpreter;
     [SetUp]
     public void Setup()
     {
+        _interpreter = new CoolInterpreter();
+    }
+    
+    [TestCaseSource(nameof(GetFailedParsingFiles))]
+    public void Parse_InvalidFile_ReturnsFailure(string filePath)
+    {
+        // Arrange
+        string sourceCode = File.ReadAllText(filePath);
+        string fileName = Path.GetFileName(filePath);
+
+        // Act
+        var result = _interpreter.TestParsing(sourceCode, fileName);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.HasErrors, Is.True, 
+                $"File '{fileName}' contains errors and should NOT parse successfully.");
+        });
     }
 
 
@@ -28,8 +50,8 @@ public partial class Tests
     [Test]
     public void TestSingleParseSuccess()
     {
-        var input = File.ReadAllText("TestCases/Parsing/success/abort.cl");
-        var result = RunInterpreter(input, Path.GetFileNameWithoutExtension("TestCases/Parsing/success/abort.cl"));
+        var input = File.ReadAllText("TestCases/Parsing/success/addedlet.cl");
+        var result = RunInterpreter(input, Path.GetFileNameWithoutExtension("TestCases/Parsing/success/addedlet.cl"));
         Console.WriteLine("Result: " + result);
 
         Assert.Multiple(() =>
@@ -111,6 +133,12 @@ public partial class Tests
             }
         }
         return TestCases;
+    }
+    
+    private static IEnumerable<string> GetFailedParsingFiles()
+    {
+        var path = Path.Combine(TestContext.CurrentContext.TestDirectory, TestFilesRoot, "Parsing", "fail");
+        return Directory.GetFiles(path, "*.cl");
     }
     
     private static InterpretationResult RunInterpreter(string input, string? sourceName = null)
