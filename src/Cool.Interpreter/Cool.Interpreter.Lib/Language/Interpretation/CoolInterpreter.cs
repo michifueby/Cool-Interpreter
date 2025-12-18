@@ -123,10 +123,10 @@ public class CoolInterpreter : IInterpreter
         }
         catch (CoolRuntimeException ex) when (ex.Message.Contains("abort"))
         {
-            /*executionDiagnostics.ReportError(
+            executionDiagnostics.ReportError(
                 SourcePosition.None,
                 ex.Message,
-                CoolErrorCodes.AbortCalled);*/
+                CoolErrorCodes.AbortCalled);
         }
         catch (CoolRuntimeException ex)
         {

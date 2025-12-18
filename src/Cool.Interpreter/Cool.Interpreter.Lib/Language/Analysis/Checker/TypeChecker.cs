@@ -225,16 +225,31 @@ public class TypeChecker
     /// type or the static class context in case of special types like "SELF_TYPE".</returns>
     private string GetTypeOfDispatch(DispatchNode node)
     {
-        var receiverType = GetExpressionType(node.Caller);
-        var staticType = node.StaticTypeName;
+        string dispatchType;  // The type from which we start method lookup
 
-        if (string.IsNullOrEmpty(staticType))
-            return GetMethodReturnType(receiverType, node.MethodName, node.Arguments, node.Location);
-        
-        if (!IsTypeCompatible(receiverType, staticType))
-            _diagnostics.ReportError(node.Location, CoolErrorCodes.StaticDispatchTypeError, $"Receiver of type {receiverType} cannot be used as {staticType}");
+        if (node.Caller == null)
+        {
+            // Implicit self dispatch: f(args) ≡ self.f(args)
+            dispatchType = _currentClass;  // e.g., "Main"
+        }
+        else
+        {
+            // Explicit dispatch: e.f(args)
+            dispatchType = GetExpressionType(node.Caller);
+        }
 
-        return GetMethodReturnType(staticType, node.MethodName, node.Arguments, node.Location);
+        // Static dispatch: e@T.f(args)
+        string lookupType = node.StaticTypeName ?? dispatchType;
+
+        // Optional: check conformance for static dispatch
+        if (node.StaticTypeName != null && !IsTypeCompatible(dispatchType, node.StaticTypeName))
+        {
+            _diagnostics.ReportError(node.Location, CoolErrorCodes.StaticDispatchTypeError,
+                $"Receiver of type '{dispatchType}' does not conform to static type '{node.StaticTypeName}'");
+            // Recovery: still use the static type for lookup
+        }
+
+        return GetMethodReturnType(lookupType, node.MethodName, node.Arguments, node.Location);
     }
 
     /// <summary>
@@ -344,9 +359,28 @@ public class TypeChecker
 
         foreach (var binding in node.Bindings)
         {
-            string declaredType = binding.TypeName;           // may be null if omitted
-            string? initializerType = null;
+            if (binding is null)
+            {
+                // This should never happen — report as internal error or skip with recovery
+                _diagnostics.ReportError(node.Location, "test",
+                    "Internal error: null binding in let expression");
+                continue;  // skip this binding to avoid crash
+            }
+            
+            string? declaredType = binding.TypeName;  
+            
+            // In COOL: type declaration is REQUIRED in let
+            // So if declaredType is null → error (unless you're allowing omission, which you shouldn't)
+            if (declaredType is null)
+            {
+                _diagnostics.ReportError(binding.Location,
+                    CoolErrorCodes.LetNoTypeNoInit,
+                    $"Let binding for '{binding.Identifier}' is missing type declaration (required in COOL)");
+                declaredType = "Object"; // recovery
+            }
 
+            string? initializerType = null;
+            
             if (binding.Initializer is not null)
             {
                 initializerType = GetExpressionType(binding.Initializer);
@@ -355,8 +389,7 @@ public class TypeChecker
                 {
                     _diagnostics.ReportError(binding.Location,
                         CoolErrorCodes.LetBindingTypeMismatch,
-                        $"Let variable '{binding.Identifier}' declared as '{declaredType}', " +
-                        $"but initialized with expression of type '{initializerType}'");
+                        $"Let variable '{binding.Identifier}' declared as '{declaredType}', but initialized with expression of type '{initializerType}'");
                 }
             }
 
