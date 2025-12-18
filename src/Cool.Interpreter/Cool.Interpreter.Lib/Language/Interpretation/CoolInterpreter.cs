@@ -168,6 +168,30 @@ public class CoolInterpreter : IInterpreter
     }
 
     /// <summary>
+    /// Parses the provided Cool program source code and generates a parse result including the syntax tree and diagnostics.
+    /// </summary>
+    /// <param name="sourceCode">
+    /// The source code of the Cool program to be parsed. Cannot be null.
+    /// </param>
+    /// <param name="sourceName">
+    /// An optional identifier for the source of the code, such as a file name. Defaults to "<string>" if not specified.
+    /// </param>
+    /// <returns>
+    /// A <see cref="ParseResult"/> object containing the syntax tree and diagnostics generated during parsing.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when the provided source code is null.
+    /// </exception>
+    public ParseResult TestParsing(string sourceCode, string? sourceName = null)
+    {
+        ArgumentNullException.ThrowIfNull(sourceCode);
+
+        sourceName ??= "<string>";
+
+        return _parser.Parse(sourceCode, sourceName);
+    }
+
+    /// <summary>
     /// Interprets and executes a Cool program from a specified file.
     /// </summary>
     /// <param name="filePath">
