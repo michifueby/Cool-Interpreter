@@ -56,6 +56,20 @@ public static class CoolErrorCodes
     public const string InheritanceCycle = "COOL0106";
 
     /// <summary>
+    /// Represents the error code "COOL0107" used to indicate
+    /// that a method with the same name has been defined more than once
+    /// within the same class in the Cool programming language.
+    /// </summary>
+    public const string DuplicateMethod = "COOL0107";
+
+    /// <summary>
+    /// Represents the error code "COOL0108" used to indicate
+    /// that an attribute with the same name has been defined more than once
+    /// within the same class in the Cool programming language.
+    /// </summary>
+    public const string DuplicateAttribute = "COOL0108";
+
+    /// <summary>
     /// Represents the error code "COOL0201" used to indicate
     /// that an attribute's initializer has a type mismatch, where
     /// the declared type of the attribute differs from the type
@@ -173,6 +187,24 @@ public static class CoolErrorCodes
     /// in the Cool programming language.
     /// </summary>
     public const string SelfTypeMisuse = "COOL0261"; // Invalid use of SELF_TYPE outside class context
+
+    /// <summary>
+    /// Represents the error code "COOL0270" used to indicate that an overriding method
+    /// has a different return type than the method it overrides.
+    /// </summary>
+    public const string MethodOverrideReturnTypeMismatch = "COOL0270"; // Override return type mismatch
+
+    /// <summary>
+    /// Represents the error code "COOL0271" used to indicate that an overriding method
+    /// has a different number of parameters than the method it overrides.
+    /// </summary>
+    public const string MethodOverrideParamCountMismatch = "COOL0271"; // Override param count mismatch
+
+    /// <summary>
+    /// Represents the error code "COOL0272" used to indicate that an overriding method
+    /// has a parameter with a different type than the corresponding parameter in the method it overrides.
+    /// </summary>
+    public const string MethodOverrideParamTypeMismatch = "COOL0272"; // Override param type mismatch
     
     /// <summary>
     /// Runtime error: division by zero occurred.

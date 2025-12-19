@@ -132,10 +132,29 @@ public class TypeChecker
     /// <param name="attr">The attribute to be checked, which includes the declared type and optional initializer.</param>
     private void CheckAttribute(AttributeNode attr)
     {
+        EnsureTypeExists(attr.TypeName, attr.Location);
+
+        // Check for illegal shadowing (attribute defined in parent)
+        var cls = _symbols.TryGetClass(_currentClass);
+        var parentName = cls?.ParentName;
+        while (parentName != null)
+        {
+            var parent = _symbols.TryGetClass(parentName);
+            if (parent == null) break; 
+            
+            if (parent.Attributes.ContainsKey(attr.Name))
+            {
+                _diagnostics.ReportError(attr.Location, CoolErrorCodes.DuplicateAttribute,
+                    $"Attribute '{attr.Name}' is an attribute of an inherited class.");
+                return; // Stop checking to avoid cascading errors
+            }
+            parentName = parent.ParentName;
+        }
+
         if (attr.Initializer is null) 
             return;
 
-        var declaredType = attr.TypeName;
+        var declaredType = attr.TypeName; // TypeName is validated above
         var actualType = GetExpressionType(attr.Initializer);
 
         if (!IsTypeCompatible(actualType, declaredType))
@@ -149,10 +168,56 @@ public class TypeChecker
     /// <param name="method">The method to be evaluated, containing its formal parameters, body, and declared return type.</param>
     private void CheckMethod(MethodNode method)
     {
+        EnsureTypeExists(method.ReturnTypeName, method.Location);
+
+        // Check for valid override
+        var cls = _symbols.TryGetClass(_currentClass);
+        var parentName = cls?.ParentName;
+        while (parentName != null)
+        {
+            var parent = _symbols.TryGetClass(parentName);
+            if (parent == null) break;
+
+            if (parent.Methods.TryGetValue(method.Name, out var parentMethod))
+            {
+                // Check return type match
+                if (method.ReturnTypeName != parentMethod.ReturnType)
+                {
+                    _diagnostics.ReportError(method.Location, CoolErrorCodes.MethodOverrideReturnTypeMismatch,
+                        $"In redefined method '{method.Name}', return type {method.ReturnTypeName} is different from original return type {parentMethod.ReturnType}.");
+                }
+                
+                // Check formal parameter count match
+                if (method.Formals.Count != parentMethod.Formals.Count)
+                {
+                    _diagnostics.ReportError(method.Location, CoolErrorCodes.MethodOverrideParamCountMismatch,
+                        $"In redefined method '{method.Name}', parameter count {method.Formals.Count} is different from original parameter count {parentMethod.Formals.Count}.");
+                }
+                else
+                {
+                     // Check parameter types match
+                     for (int i = 0; i < method.Formals.Count; i++)
+                     {
+                         if (method.Formals[i].TypeName != parentMethod.Formals[i].Type)
+                         {
+                             _diagnostics.ReportError(method.Location, CoolErrorCodes.MethodOverrideParamTypeMismatch,
+                                 $"In redefined method '{method.Name}', parameter type {method.Formals[i].TypeName} is different from original type {parentMethod.Formals[i].Type}.");
+                         }
+                     }
+                }
+                break; // Found the nearest override, stop checking up
+            }
+            parentName = parent.ParentName;
+        }
+
+
         // Build scope: formals only (self is implicit)
         var scope = ImmutableDictionary.CreateBuilder<string, string>(StringComparer.Ordinal);
         foreach (var formal in method.Formals)
+        {
+            EnsureTypeExists(formal.TypeName, method.Location); // Or formal location if available
             scope[formal.Name] = formal.TypeName;
+        }
 
         var previousLocals = _localVariables;
         _localVariables = scope.ToImmutable();
@@ -168,6 +233,21 @@ public class TypeChecker
     }
 
     /// <summary>
+    /// Verifies that the specified type is defined in the symbol table.
+    /// Reports an error if the type is unknown.
+    /// </summary>
+    private void EnsureTypeExists(string typeName, SourcePosition location)
+    {
+        if (typeName == "SELF_TYPE") return;
+        if (typeName == "prim_slot") return; // Internal type?
+
+        if (_symbols.TryGetClass(typeName) is null)
+        {
+            _diagnostics.ReportError(location, CoolErrorCodes.UndefinedType, $"Type '{typeName}' is not defined.");
+        }
+    }
+
+    /// <summary>
     /// Determines and returns the type of a given expression node within the context of the COOL language.
     /// </summary>
     /// <param name="expr">The expression node for which the type is to be determined.</param>
@@ -180,7 +260,7 @@ public class TypeChecker
         BoolLiteralNode             => "Bool",
         SelfNode                    => _currentClass,
         IdentifierExpressionNode id => GetVariableType(id.Identifier, id.Location),
-        NewNode n                   => n.TypeName == "SELF_TYPE" ? _currentClass : n.TypeName,
+        NewNode n                   => GetTypeOfNew(n),
         
         AssignNode a                => GetTypeOfAssign(a),
         DispatchNode d              => GetTypeOfDispatch(d),
@@ -196,6 +276,12 @@ public class TypeChecker
 
         _ => "Object"
     };
+
+    private string GetTypeOfNew(NewNode node)
+    {
+        EnsureTypeExists(node.TypeName, node.Location);
+        return node.TypeName == "SELF_TYPE" ? _currentClass : node.TypeName;
+    }
 
     /// <summary>
     /// Determines the type of an assignment expression by validating the compatibility
@@ -242,11 +328,15 @@ public class TypeChecker
         string lookupType = node.StaticTypeName ?? dispatchType;
 
         // Optional: check conformance for static dispatch
-        if (node.StaticTypeName != null && !IsTypeCompatible(dispatchType, node.StaticTypeName))
+        if (node.StaticTypeName != null)
         {
-            _diagnostics.ReportError(node.Location, CoolErrorCodes.StaticDispatchTypeError,
-                $"Receiver of type '{dispatchType}' does not conform to static type '{node.StaticTypeName}'");
-            // Recovery: still use the static type for lookup
+            EnsureTypeExists(node.StaticTypeName, node.Location);
+            if (!IsTypeCompatible(dispatchType, node.StaticTypeName))
+            {
+                _diagnostics.ReportError(node.Location, CoolErrorCodes.StaticDispatchTypeError,
+                    $"Receiver of type '{dispatchType}' does not conform to static type '{node.StaticTypeName}'");
+                // Recovery: still use the static type for lookup
+            }
         }
 
         return GetMethodReturnType(lookupType, node.MethodName, node.Arguments, node.Location);
@@ -256,21 +346,17 @@ public class TypeChecker
     /// Determines the return type of a specified method within a given class, verifying its existence,
     /// checking method arguments, and resolving the actual return type or reporting errors if necessary.
     /// </summary>
-    /// <param name="className">The name of the class containing the method to be checked.</param>
-    /// <param name="methodName">The name of the method whose return type is determined.</param>
-    /// <param name="args">The list of argument expressions passed to the method.</param>
-    /// <param name="pos">The source position indicating where the method call occurs in the program.</param>
-    /// <returns>The return type of the method, or "Object" if the method is not found or an error is encountered.</returns>
     private string GetMethodReturnType(string className, string methodName,
         IReadOnlyList<ExpressionNode> args, SourcePosition pos)
     {
-        var cls = FindClassWithMethod(className, methodName, args.Count);
+        var cls = FindClassWithMethod(className, methodName);
         if (cls is null)
         {
-            _diagnostics.ReportError(pos, CoolErrorCodes.StaticDispatchTypeError, $"Method '{methodName}' not found in class {className} or its ancestors");
+            _diagnostics.ReportError(pos, CoolErrorCodes.UndefinedMethod, $"Method '{methodName}' not found in class {className} or its ancestors");
             return "Object";
         }
-
+        
+        // This is safe because FindClassWithMethod keeps returning non-null only if method exists
         var method = cls.Methods[methodName];
         CheckMethodArguments(method, args, pos);
 
@@ -278,40 +364,41 @@ public class TypeChecker
     }
 
     /// <summary>
-    /// Searches for a class in the symbol table that contains a method with the specified name and arity
-    /// (number of parameters). The search considers the inheritance hierarchy of the class.
+    /// Searches for a class in the symbol table that contains a method with the specified name.
+    /// The search considers the inheritance hierarchy of the class.
     /// </summary>
-    /// <param name="className">The name of the class to begin the search from.</param>
-    /// <param name="methodName">The name of the method to look for.</param>
-    /// <param name="arity">The number of parameters the method should have.</param>
-    /// <returns>The class symbol containing the method if found; otherwise, null.</returns>
-    private ClassSymbol? FindClassWithMethod(string className, string methodName, int arity)
+    private ClassSymbol? FindClassWithMethod(string className, string methodName)
     {
-        var cls = _symbols.GetClass(className);
+        var cls = _symbols.TryGetClass(className);
         while (cls != null)
         {
-            if (cls.Methods.TryGetValue(methodName, out var m) && m.Formals.Count == arity)
+            if (cls.Methods.ContainsKey(methodName))
                 return cls;
-            cls = cls.ParentName is null ? null : _symbols.GetClass(cls.ParentName);
+            cls = cls.ParentName is null ? null : _symbols.TryGetClass(cls.ParentName);
         }
         return null;
     }
 
     /// <summary>
-    /// Validates the arguments supplied to a method call by checking their types against the formal parameters
-    /// defined in the method declaration. Reports an error if the types are incompatible.
+    /// Validates the arguments supplied to a method call by checking their count and types against
+    /// the formal parameters defined in the method declaration. Reports error if count or types are incompatible.
     /// </summary>
-    /// <param name="method">The method symbol containing the formal parameter definitions.</param>
-    /// <param name="args">A list of expression nodes representing the arguments passed to the method call.</param>
-    /// <param name="pos">The source position indicating where the method call occurs in the syntax tree.</param>
     private void CheckMethodArguments(MethodSymbol method, IReadOnlyList<ExpressionNode> args, SourcePosition pos)
     {
+        if (method.Formals.Count != args.Count)
+        {
+             _diagnostics.ReportError(pos, CoolErrorCodes.WrongNumberOfArguments, 
+                 $"Method '{method.Name}' expects {method.Formals.Count} arguments, but {args.Count} were provided.");
+             // Stop validation here to avoid index out of range
+             return; 
+        }
+
         for (int i = 0; i < args.Count; i++)
         {
             var argType = GetExpressionType(args[i]);
             var paramType = method.Formals[i].Type;
             if (!IsTypeCompatible(argType, paramType))
-                _diagnostics.ReportError(args[i].Location, CoolErrorCodes.WrongNumberOfArguments, $"Argument {i+1}: expected {paramType}, got {argType}");
+                _diagnostics.ReportError(args[i].Location, CoolErrorCodes.ArgumentTypeMismatch, $"Argument {i+1}: expected {paramType}, got {argType}");
         }
     }
 
@@ -348,121 +435,9 @@ public class TypeChecker
         => node.Expressions.LastOrDefault() is { } e ? GetExpressionType(e) : "Object";
 
     /// <summary>
-    /// Determines and returns the type of a "let" expression, including its bindings and body, in the syntax tree of a COOL program.
-    /// </summary>
-    /// <param name="node">The <see cref="LetNode"/> instance representing the "let" expression to be analyzed.</param>
-    /// <returns>A string representing the type of the "let" expression's body, which ultimately determines the type of the entire "let" expression.</returns>
-    private string GetTypeOfLet(LetNode node)
-    {
-        var previousLocals = _localVariables;
-        var builder = _localVariables.ToBuilder();
-
-        foreach (var binding in node.Bindings)
-        {
-            if (binding is null)
-            {
-                // This should never happen — report as internal error or skip with recovery
-                _diagnostics.ReportError(node.Location, "test",
-                    "Internal error: null binding in let expression");
-                continue;  // skip this binding to avoid crash
-            }
-            
-            string? declaredType = binding.TypeName;  
-            
-            // In COOL: type declaration is REQUIRED in let
-            // So if declaredType is null → error (unless you're allowing omission, which you shouldn't)
-            if (declaredType is null)
-            {
-                _diagnostics.ReportError(binding.Location,
-                    CoolErrorCodes.LetNoTypeNoInit,
-                    $"Let binding for '{binding.Identifier}' is missing type declaration (required in COOL)");
-                declaredType = "Object"; // recovery
-            }
-
-            string? initializerType = null;
-            
-            if (binding.Initializer is not null)
-            {
-                initializerType = GetExpressionType(binding.Initializer);
-
-                if (declaredType is not null && !IsTypeCompatible(initializerType, declaredType))
-                {
-                    _diagnostics.ReportError(binding.Location,
-                        CoolErrorCodes.LetBindingTypeMismatch,
-                        $"Let variable '{binding.Identifier}' declared as '{declaredType}', but initialized with expression of type '{initializerType}'");
-                }
-            }
-
-            // Determine the actual type of the binding
-            string bindingType = declaredType
-                                 ?? initializerType
-                                 ?? DeterminateDefaultTypeForDeclaredOrError(binding); // only if declared
-
-            // If no type and no initializer → error (not allowed in Cool)
-            if (declaredType is null && initializerType is null)
-            {
-                _diagnostics.ReportError(binding.Location,
-                    CoolErrorCodes.LetNoTypeNoInit,
-                    $"Let variable '{binding.Identifier}' has no type declaration and no initializer");
-                bindingType = "Object"; // recover
-            }
-
-            // Add to scope
-            builder[binding.Identifier] = bindingType;
-        }
-
-        _localVariables = builder.ToImmutable();
-
-        // Type of let = type of body
-        string bodyType = GetExpressionType(node.Body);
-
-        // Restore scope
-        _localVariables = previousLocals;
-
-        return bodyType;
-    }
-    
-    private string DeterminateDefaultTypeForDeclaredOrError(LetBindingNode binding)
-    {
-        if (binding.TypeName is not null)
-            return DeterminateDefaultType(binding.TypeName);
-
-        // Should not reach here — already checked above
-        return "Object";
-    }
-
-    /// <summary>
-    /// Determines the resulting type of a "case" expression by evaluating all branches of the
-    /// "case" construct, ensuring type consistency and computing the least common ancestor
-    /// of branch result types.
-    /// </summary>
-    /// <param name="node">The <see cref="CaseNode"/> representing the "case" expression to analyze.</param>
-    /// <returns>The resulting type of the "case" expression. Returns "Object" if no branches are defined.</returns>
-    private string GetTypeOfCase(CaseNode node)
-    {
-        GetExpressionType(node.Scrutinee); 
-
-        string? resultType = null;
-        foreach (var branch in node.Branches)
-        {
-            var old = _localVariables;
-            _localVariables = _localVariables.SetItem(branch.Identifier, branch.TypeName);
-            var branchType = GetExpressionType(branch.Body);
-            resultType = resultType is null ? branchType : JoinTypes(resultType, branchType);
-            _localVariables = old;
-        }
-        return resultType ?? "Object";
-    }
-
-    /// <summary>
     /// Infers and returns the semantic type of a binary operation in a COOL program based on the operator
     /// and the types of the left and right operands.
     /// </summary>
-    /// <param name="node">The binary operation node representing the operation within the syntax tree.</param>
-    /// <returns>
-    /// The string representation of the resolved type for the binary operation. This can include "Int",
-    /// "Bool", or "Object" based on the operator and operand types.
-    /// </returns>
     private string GetTypeOfBinary(BinaryOperationNode node)
     {
         var left = GetExpressionType(node.Left);
@@ -487,8 +462,6 @@ public class TypeChecker
     /// Determines the type of a unary operation by evaluating the type of its operand
     /// and considering the specific operator applied.
     /// </summary>
-    /// <param name="node">The unary operation node containing the operator and its operand expression.</param>
-    /// <returns>The deduced type of the unary operation. If the operator is not applicable to the operand type, returns "Object" and reports an error.</returns>
     private string GetTypeOfUnary(UnaryOperationNode node)
     {
         var type = GetExpressionType(node.Operand);
@@ -506,10 +479,6 @@ public class TypeChecker
     /// Reports a diagnostic error for the given source position and error details,
     /// and provides a recovery type to maintain semantic analysis consistency.
     /// </summary>
-    /// <param name="pos">The source position in the program where the error occurred.</param>
-    /// <param name="code">The error code associated with the diagnostic.</param>
-    /// <param name="message">The error message describing the diagnostic issue.</param>
-    /// <returns>The default recovery type, which is always "Object".</returns>
     private string ReportAndRecover(SourcePosition pos, string code, string message)
     {
         _diagnostics.ReportError(pos, code, message);
@@ -520,20 +489,17 @@ public class TypeChecker
     /// Retrieves the type of a given variable within the context of the current class and local scope.
     /// Reports an error if the variable is undefined or inaccessible in the given location.
     /// </summary>
-    /// <param name="name">The name of the variable whose type is to be determined.</param>
-    /// <param name="location">The source code position of the variable occurrence for error reporting.</param>
-    /// <returns>The type of the variable as a string, or "Object" if the variable is undefined.</returns>
     private string GetVariableType(string name, SourcePosition location)
     {
         if (_localVariables.TryGetValue(name, out var type)) return type;
         if (name == "self") return _currentClass;
 
-        var cls = _symbols.GetClass(_currentClass);
+        var cls = _symbols.TryGetClass(_currentClass);
         while (cls != null)
         {
             if (cls.Attributes.TryGetValue(name, out var attr))
                 return attr.Type;
-            cls = cls.ParentName is null ? null : _symbols.GetClass(cls.ParentName);
+            cls = cls.ParentName is null ? null : _symbols.TryGetClass(cls.ParentName);
         }
 
         _diagnostics.ReportError(location, CoolErrorCodes.UndefinedVariable, $"Undefined variable '{name}'");
@@ -543,14 +509,8 @@ public class TypeChecker
     /// <summary>
     /// Determines whether a given subtype is compatible with a specified supertype within the context
     /// of the class hierarchy in the COOL language.
-    /// This is used for ensuring type correctness when analyzing expressions and assignments.
+    /// Returns true if the subtype is compatible with the supertype.
     /// </summary>
-    /// <param name="subtype">The name of the subtype being checked for compatibility. This can include "SELF_TYPE".</param>
-    /// <param name="supertype">The name of the supertype against which compatibility is being evaluated. This can include "SELF_TYPE".</param>
-    /// <returns>
-    /// Returns true if the subtype is compatible with the supertype (i.e., the subtype is the same as
-    /// or inherits from the supertype). Returns false otherwise. If either type is null, the method will also return false.
-    /// </returns>
     private bool IsTypeCompatible(string? subtype, string? supertype)
     {
         if (subtype == supertype) return true;
@@ -558,27 +518,111 @@ public class TypeChecker
         if (subtype == "SELF_TYPE") subtype = _currentClass;
         if (supertype == "SELF_TYPE") supertype = _currentClass;
 
-        var current = _symbols.GetClass(subtype);
+        var current = _symbols.TryGetClass(subtype);
         while (current != null)
         {
             if (current.Name == supertype) return true;
-            current = current.ParentName is null ? null : _symbols.GetClass(current.ParentName);
+            current = current.ParentName is null ? null : _symbols.TryGetClass(current.ParentName);
         }
         return false;
     }
 
     /// <summary>
-    /// Determines the least common ancestor (join) of two types in the type hierarchy.
-    /// This is used to find a common type when evaluating expressions with multiple branches,
-    /// such as in conditional or case statements in the COOL language.
+    /// Determines and returns the type of a "let" expression, including its bindings and body, in the syntax tree of a COOL program.
     /// </summary>
-    /// <param name="type1">The name of the first type in the type comparison.</param>
-    /// <param name="type2">The name of the second type in the type comparison.</param>
-    /// <returns>The name of the least common ancestor type if the types are compatible,
-    /// or "Object" if no compatibility exists between the provided types.</returns>
-    private string JoinTypes(string type1, string type2) =>
-        IsTypeCompatible(type1, type2) ? type2 :
-        IsTypeCompatible(type2, type1) ? type1 : "Object";
+    /// <param name="node">The <see cref="LetNode"/> instance representing the "let" expression to be analyzed.</param>
+    /// <returns>A string representing the type of the "let" expression's body, which ultimately determines the type of the entire "let" expression.</returns>
+    /// <summary>
+    /// Determines and returns the type of a "let" expression, including its bindings and body, in the syntax tree of a COOL language program.
+    /// </summary>
+    private string GetTypeOfLet(LetNode node)
+    {
+        var previousLocals = _localVariables;
+        // Don't bulk-copy yet, we need to respect scope order
+        // But since _localVariables is immutable, we just update it in the loop
+        
+        foreach (var binding in node.Bindings)
+        {
+            if (binding is null) continue;
+            
+            string declaredType = binding.TypeName ?? "Object";
+            string initializationType;
+
+            if (binding.Initializer is not null)
+            {
+                // Verify initializer using CURRENT scope (includes previous let-bindings)
+                initializationType = GetExpressionType(binding.Initializer);
+                
+                if (binding.TypeName is not null && !IsTypeCompatible(initializationType, declaredType))
+                {
+                    _diagnostics.ReportError(binding.Location,
+                        CoolErrorCodes.LetBindingTypeMismatch,
+                        $"Let binding '{binding.Identifier}' of type {declaredType} cannot be initialized with type {initializationType}");
+                }
+            }
+            
+            // Update scope for NEXT binding and BODY
+            _localVariables = _localVariables.SetItem(binding.Identifier, declaredType);
+        }
+
+        // Type of let = type of body
+        string bodyType = GetExpressionType(node.Body);
+
+        // Restore scope
+        _localVariables = previousLocals;
+
+        return bodyType;
+    }
+    
+    /// <summary>
+    /// Determines the resulting type of a "case" expression by evaluating all branches...
+    /// </summary>
+    private string GetTypeOfCase(CaseNode node)
+    {
+        GetExpressionType(node.Scrutinee); 
+
+        string? resultType = null;
+        foreach (var branch in node.Branches)
+        {
+            var old = _localVariables;
+            _localVariables = _localVariables.SetItem(branch.Identifier, branch.TypeName);
+            var branchType = GetExpressionType(branch.Body);
+            resultType = resultType is null ? branchType : JoinTypes(resultType, branchType);
+            _localVariables = old;
+        }
+        return resultType ?? "Object";
+    }
+
+    /// <summary>
+    /// Determines the least common ancestor (LCA) of two types in the inheritance hierarchy.
+    /// </summary>
+    private string JoinTypes(string type1, string type2)
+    {
+        if (type1 == type2) return type1;
+        if (type1 == "SELF_TYPE") type1 = _currentClass;
+        if (type2 == "SELF_TYPE") type2 = _currentClass;
+
+        // Get inheritance chain for type1
+        var chain1 = new HashSet<string>(StringComparer.Ordinal);
+        var curr = type1;
+        while (curr != null)
+        {
+            chain1.Add(curr);
+            var cls = _symbols.GetClass(curr);
+            curr = cls?.ParentName;
+        }
+
+        // Walk up type2 until we find a match
+        curr = type2;
+        while (curr != null)
+        {
+            if (chain1.Contains(curr)) return curr;
+            var cls = _symbols.GetClass(curr);
+            curr = cls?.ParentName;
+        }
+
+        return "Object"; // Fallback, though Object should have been found
+    }
 
     /// <summary>
     /// Determines the default type for a given Cool language type name.

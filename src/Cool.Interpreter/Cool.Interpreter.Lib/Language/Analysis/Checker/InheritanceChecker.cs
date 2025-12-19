@@ -29,14 +29,15 @@ public class InheritanceChecker
     /// the compilation process, ensuring that all classes are correctly defined, their parent relationships
     /// are valid, and potential inheritance cycles are identified and reported.
     /// </summary>
-    private readonly SymbolTable _symbolTable;
+    /// <summary>
+    /// Represents the symbol table used during the semantic analysis phase of the compiler.
+    /// It holds information about all registered classes, including built-in and user-defined ones.
+    /// </summary>
+    private SymbolTable _symbolTable;
 
     /// <summary>
     /// A collection of diagnostics used to record errors, warnings, and informational messages
-    /// during the semantic analysis phase of the compiler. This bag is essential for capturing information
-    /// about issues such as duplicate class definitions, redefinitions of built-in classes, improper inheritance
-    /// relationships, and missing or malformed program components. These diagnostics help in identifying
-    /// and reporting semantic issues critical for ensuring program correctness.
+    /// during the semantic analysis phase of the compiler.
     /// </summary>
     private readonly DiagnosticBag _diagnostics;
 
@@ -44,27 +45,18 @@ public class InheritanceChecker
     /// A collection that stores the set of all classes defined within a Cool program during the first
     /// semantic analysis pass. This set is used to detect duplicate class definitions, ensure that
     /// all parent classes are defined, and validate the inheritance graph.
-    /// The stored class names include only user-defined classes and exclude built-in classes.
     /// </summary>
     private readonly HashSet<string> _definedClasses = new(StringComparer.Ordinal);
 
     /// <summary>
     /// Maintains a mapping of class names to their respective parent class names
-    /// within the inheritance graph of the language. This dictionary is used to track
-    /// parent-child relationships between classes during the semantic analysis phase
-    /// to validate inheritance structures, detect inheritance cycles, and ensure
-    /// that all parent classes are properly defined.
-    /// A class may not have a parent, in which case the value will be null.
+    /// within the inheritance graph of the language.
     /// </summary>
     private readonly Dictionary<string, string?> _classParentMap = new(StringComparer.Ordinal);
 
     /// <summary>
     /// Represents the set of built-in classes that are predefined and essential for the
-    /// language's runtime and type system. These classes include core entities such as "Object", "IO",
-    /// "Int", "String", and "Bool", serving as the foundation for user-defined class hierarchies
-    /// and ensuring consistent behavior. This set is used during the semantic analysis phase
-    /// to validate inheritance relationships, prevent redefinitions, and enforce proper usage
-    /// of built-in types.
+    /// language's runtime and type system.
     /// </summary>
     private static readonly ImmutableHashSet<string> BasicClasses =
         ImmutableHashSet.Create(StringComparer.Ordinal, "Object", "IO", "Int", "String", "Bool");
@@ -76,17 +68,8 @@ public class InheritanceChecker
     }
 
     /// <summary>
-    /// Registers all classes defined in the given program, performing validations for duplicate
-    /// definitions, redefinitions of built-in classes, and invalid inheritance from primitive
-    /// types. Updates and returns an updated symbol table with the added classes if all checks
-    /// succeed. Also ensures the presence of a "Main" class in the program.
+    /// Registers all classes defined in the given program...
     /// </summary>
-    /// <param name="program">
-    /// The abstract syntax tree representation of the program containing the classes to be registered.
-    /// </param>
-    /// <returns>
-    /// An updated instance of the symbol table that includes all successfully registered classes.
-    /// </returns>
     public SymbolTable RegisterClasses(ProgramNode program)
     {
         var currentTable = _symbolTable;  // starts with built-ins only
@@ -140,6 +123,13 @@ public class InheritanceChecker
                 switch (feature)
                 {
                     case MethodNode method:
+                        if (classSymbol.HasMethod(method.Name))
+                        {
+                            _diagnostics.ReportError(method.Location, CoolErrorCodes.DuplicateMethod,
+                                $"Method '{method.Name}' is multiply defined in class '{className}'.");
+                            continue;
+                        }
+                        
                         var formals = method.Formals
                             .Select(f => new FormalSymbol(f.Name, f.TypeName))
                             .ToImmutableList();
@@ -152,6 +142,13 @@ public class InheritanceChecker
                         break;
 
                     case AttributeNode attr:
+                        if (classSymbol.HasAttribute(attr.Name))
+                        {
+                            _diagnostics.ReportError(attr.Location, CoolErrorCodes.DuplicateAttribute,
+                                $"Attribute '{attr.Name}' is multiply defined in class '{className}'.");
+                            continue;
+                        }
+
                         var attrSymbol = new AttributeSymbol(
                             attr.Name,
                             attr.TypeName,
@@ -172,14 +169,13 @@ public class InheritanceChecker
                 "Program must contain a class named 'Main'.");
         }
 
+        // Update internal state so subsequent checks use the full table
+        _symbolTable = currentTable;
         return currentTable;
     }
 
     /// <summary>
-    /// Validates the inheritance relationships in the program by ensuring that all parent classes
-    /// exist and detecting inheritance cycles. This method is a critical part of semantic analysis
-    /// and helps to identify structural issues in the inheritance hierarchy before further
-    /// processing occurs.
+    /// Validates the inheritance relationships...
     /// </summary>
     public void CheckInheritanceGraph()
     {
@@ -198,10 +194,26 @@ public class InheritanceChecker
         {
             if (_classParentMap.TryGetValue(className, out var parentName) && parentName is not null)
             {
+                // Is the parent defined?
+                // We check _definedClasses (user types) and BasicClasses (built-in).
                 bool parentExists = _definedClasses.Contains(parentName) || BasicClasses.Contains(parentName);
                 if (!parentExists)
                 {
-                    var location = _symbolTable.GetClass(className)?.Definition?.Location ?? SourcePosition.None;
+                    // To get the location, we looked up the child class in _symbolTable.
+                    // THIS was the bug: if _symbolTable was old, it didn't have the child class.
+                    // Now that we update _symbolTable at end of RegisterClasses, this should be safe.
+                    // BUT, if RegisterClasses skipped adding the class due to error (Wait, did we skip?),
+                    // No, if partial features failed we still added the class.
+                    // The only time we skip adding class is if DuplicateClass or RedefineBuiltin.
+                    // In that case _definedClasses doesn't contain it.
+                    // So we are safe iterating _definedClasses.
+                    
+                    // One edge case: if RegisterClasses added it to _definedClasses but failed to add to currentTable?
+                    // No, invalid features just skip features, class is added.
+                    // So GetClass(className) should succeed.
+                    var classSym = _symbolTable.GetClass(className);
+                    var location = classSym?.Definition?.Location ?? SourcePosition.None;
+                    
                     _diagnostics.ReportError(location, CoolErrorCodes.UndefinedParent,
                         $"Class '{className}' inherits from undefined class '{parentName}'.");
                 }
@@ -210,10 +222,7 @@ public class InheritanceChecker
     }
 
     /// <summary>
-    /// Detects cycles in the inheritance graph of the defined classes.
-    /// This method ensures there are no circular inheritance relationships
-    /// by traversing the inheritance hierarchy and identifying cycles.
-    /// If a cycle is found, it records the error in the diagnostics bag and stops further processing.
+    /// Detects cycles in the inheritance graph...
     /// </summary>
     private void DetectInheritanceCycles()
     {
@@ -230,17 +239,6 @@ public class InheritanceChecker
         }
     }
 
-    /// <summary>
-    /// Attempts to detect an inheritance cycle starting from the specified class in the inheritance graph.
-    /// This method performs a depth-first traversal of the graph, checking for cycles by maintaining
-    /// a recursion stack to track the current traversal path.
-    /// </summary>
-    /// <param name="current">The name of the class being analyzed for potential cycles.</param>
-    /// <param name="visited">A set of classes that have already been visited during the traversal.</param>
-    /// <param name="stack">A stack used to track the current path of the recursion and detect cycles.</param>
-    /// <returns>
-    /// Returns true if an inheritance cycle is detected; otherwise, returns false.
-    /// </returns>
     private bool TryDetectCycle(string current, HashSet<string> visited, HashSet<string> stack)
     {
         visited.Add(current);
@@ -248,6 +246,18 @@ public class InheritanceChecker
 
         if (_classParentMap.TryGetValue(current, out var parent) && parent is not null)
         {
+            // If parent is undefined, we already reported it in EnsureAllParentsExist.
+            // But checking for cycle might still traverse. 
+            // If parent is not in _definedClasses or basic classes, we stop?
+            // Cycle detection assumes valid graph connections.
+            // If parent is undefined, we can't follow it.
+            if (!_definedClasses.Contains(parent) && !BasicClasses.Contains(parent))
+            {
+                 // Parent is not a known class, stop traversing this path.
+                 stack.Remove(current);
+                 return false;
+            }
+
             if (stack.Contains(parent))
             {
                 var cycle = new List<string>();
@@ -261,6 +271,8 @@ public class InheritanceChecker
                 cycle.Reverse();
 
                 var path = string.Join(" to ", cycle);
+                
+                // Use updated symbol table
                 var location = _symbolTable.GetClass(current)?.Definition?.Location ?? SourcePosition.None;
 
                 _diagnostics.ReportError(location, CoolErrorCodes.InheritanceCycle, $"Inheritance cycle detected: {path}");
