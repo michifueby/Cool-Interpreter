@@ -8,6 +8,8 @@
 
 using Antlr4.Runtime.Misc;
 
+using System.Runtime.ExceptionServices;
+
 namespace Cool.Interpreter.Lib.Language.Parsing;
 
 using Antlr4.Runtime;
@@ -55,12 +57,9 @@ public class CoolParserEngine
 
         try
         {
-            var context = parser.program();
+            var result = RunParserWithIncreasedStack(parser, sourceName, diagnostics);
 
-            var visitor = new AstBuilderVisitor(sourceName);
-            var programNode = visitor.Visit(context) as ProgramNode;
-
-            return new ParseResult(programNode, diagnostics.Diagnostics);
+            return result;
         }
         catch (ParseCanceledException ex)
         {
@@ -82,5 +81,39 @@ public class CoolParserEngine
 
             return new ParseResult(null, diagnostics.Diagnostics);
         }
+    }
+
+    private ParseResult RunParserWithIncreasedStack(CoolParser parser, string sourceName, DiagnosticBag diagnostics)
+    {
+        // 4MB stack size to handle deep recursion
+        const int StackSize = 4 * 1024 * 1024;
+        
+        ParseResult? result = null;
+        Exception? caughtException = null;
+
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                var context = parser.program();
+                var visitor = new AstBuilderVisitor(sourceName);
+                var programNode = visitor.Visit(context) as ProgramNode;
+                result = new ParseResult(programNode, diagnostics.Diagnostics);
+            }
+            catch (Exception ex)
+            {
+                caughtException = ex;
+            }
+        }, StackSize);
+
+        thread.Start();
+        thread.Join();
+
+        if (caughtException != null)
+        {
+            ExceptionDispatchInfo.Capture(caughtException).Throw();
+        }
+
+        return result ?? new ParseResult(null, diagnostics.Diagnostics);
     }
 }
