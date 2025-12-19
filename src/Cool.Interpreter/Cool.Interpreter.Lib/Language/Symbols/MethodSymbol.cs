@@ -85,4 +85,44 @@ public class MethodSymbol
     /// <returns>A new <see cref="MethodSymbol"/> instance with the specified formal parameter added.</returns>
     public MethodSymbol AddFormal(string name, string type) =>
         new(Name, ReturnType, Formals.Add(new FormalSymbol(name, type)), Location);
+
+    /// <summary>
+    /// Creates a method symbol with the specified name, return type, formals, and location.
+    /// Used for defining user-defined methods from AST nodes.
+    /// </summary>
+    /// <param name="name">The name of the method.</param>
+    /// <param name="returnType">The return type of the method.</param>
+    /// <param name="formals">The formal parameters of the method.</param>
+    /// <param name="location">The source position where the method is defined.</param>
+    /// <returns>A new <see cref="MethodSymbol"/> representing the method.</returns>
+    public static MethodSymbol Create(string name, string returnType, ImmutableList<FormalSymbol> formals, SourcePosition location) =>
+        new(name, returnType, formals, location);
+
+    /// <summary>
+    /// Creates a built-in method symbol with the specified name and return type.
+    /// Used for defining methods on built-in classes (Object, IO, String, Int, Bool).
+    /// </summary>
+    /// <param name="name">The name of the built-in method.</param>
+    /// <param name="returnType">The return type of the built-in method.</param>
+    /// <returns>A new <see cref="MethodSymbol"/> representing the built-in method.</returns>
+    public static MethodSymbol CreateBuiltin(string name, string returnType) =>
+        new(name, returnType, ImmutableList<FormalSymbol>.Empty, SourcePosition.None);
+
+    /// <summary>
+    /// Creates a built-in method symbol with the specified name, return type, and formal parameters.
+    /// Used for defining methods on built-in classes that require parameters.
+    /// </summary>
+    /// <param name="name">The name of the built-in method.</param>
+    /// <param name="returnType">The return type of the built-in method.</param>
+    /// <param name="formals">The formal parameters of the method as (name, type) tuples.</param>
+    /// <returns>A new <see cref="MethodSymbol"/> representing the built-in method.</returns>
+    public static MethodSymbol CreateBuiltin(string name, string returnType, params (string Name, string Type)[] formals)
+    {
+        var formalsList = ImmutableList.CreateBuilder<FormalSymbol>();
+        foreach (var (formalName, formalType) in formals)
+        {
+            formalsList.Add(new FormalSymbol(formalName, formalType));
+        }
+        return new(name, returnType, formalsList.ToImmutable(), SourcePosition.None);
+    }
 }

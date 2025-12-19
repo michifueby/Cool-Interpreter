@@ -8,6 +8,7 @@
 
 namespace Cool.Interpreter.Lib.Language.Interpretation;
 
+using System.Collections.Immutable;
 using Cool.Interpreter.Lib.Core.Exeptions;
 using Cool.Interpreter.Lib.Core.Syntax;
 using Cool.Interpreter.Lib.Language.Classes;
@@ -111,46 +112,51 @@ public class CoolInterpreter : IInterpreter
         {
             executionDiagnostics.ReportError(
                 SourcePosition.None,
-                ex.Message,
-                CoolErrorCodes.DivisionByZero);
+                CoolErrorCodes.DivisionByZero,
+                ex.Message);
         }
         catch (CoolRuntimeException ex) when (ex.Message.Contains("substr"))
         {
             executionDiagnostics.ReportError(
                 SourcePosition.None,
-                ex.Message,
-                CoolErrorCodes.SubstrOutOfRange);
+                CoolErrorCodes.SubstrOutOfRange,
+                ex.Message);
         }
         catch (CoolRuntimeException ex) when (ex.Message.Contains("abort"))
         {
             executionDiagnostics.ReportError(
                 SourcePosition.None,
-                ex.Message,
-                CoolErrorCodes.AbortCalled);
+                CoolErrorCodes.AbortCalled,
+                ex.Message);
         }
         catch (CoolRuntimeException ex)
         {
             // Generic runtime error from user code
             executionDiagnostics.ReportError(
                 SourcePosition.None,
-                ex.Message,
-                CoolErrorCodes.RuntimeError);
+                CoolErrorCodes.RuntimeError,
+                ex.Message);
         }
         catch (Exception ex)
         {
             // This should never happen — it's a bug in the interpreter
             executionDiagnostics.ReportError(
                 SourcePosition.None,
-                $"Internal interpreter error: {ex.Message}",
-                CoolErrorCodes.InternalInterpreterError);
+                CoolErrorCodes.InternalInterpreterError,
+                $"Internal interpreter error: {ex.Message}");
         }
         
         // Phase 3: Return result
         if (executionDiagnostics.HasErrors)
         {
+            // Combine parsing diagnostics with execution diagnostics
+            var allDiagnostics = parseResult.Diagnostics
+                .Concat(executionDiagnostics.Diagnostics)
+                .ToImmutableArray();
+            
             return InterpretationResult.Failure(
                 output: string.Empty,
-                diagnostics: [..parseResult.Diagnostics],
+                diagnostics: allDiagnostics,
                 returnedValue: null);
         }
 
@@ -189,6 +195,42 @@ public class CoolInterpreter : IInterpreter
         sourceName ??= "<string>";
 
         return _parser.Parse(sourceCode, sourceName);
+    }
+
+    /// <summary>
+    /// Parses and performs semantic analysis on the provided Cool program source code.
+    /// This method is intended for testing semantic analysis independently.
+    /// </summary>
+    /// <param name="sourceCode">
+    /// The source code of the Cool program to be analyzed. Cannot be null.
+    /// </param>
+    /// <param name="sourceName">
+    /// An optional identifier for the source of the code, such as a file name. Defaults to "&lt;string&gt;" if not specified.
+    /// </param>
+    /// <returns>
+    /// A <see cref="SemanticResult"/> object containing the symbol table (if successful) and diagnostics generated during analysis.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when the provided source code is null.
+    /// </exception>
+    public SemanticResult TestSemantics(string sourceCode, string? sourceName = null)
+    {
+        ArgumentNullException.ThrowIfNull(sourceCode);
+
+        sourceName ??= "<string>";
+
+        // First parse the source code
+        var parseResult = _parser.Parse(sourceCode, sourceName);
+        
+        // If parsing failed, return failure with parse diagnostics
+        if (parseResult.SyntaxTree is null || parseResult.HasErrors)
+        {
+            return SemanticResult.Failure(parseResult.Diagnostics.ToList());
+        }
+
+        // Perform semantic analysis
+        var diagnostics = new DiagnosticBag();
+        return _analyzer.Analyze(parseResult.SyntaxTree, diagnostics);
     }
 
     /// <summary>

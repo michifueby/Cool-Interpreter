@@ -1,165 +1,97 @@
-﻿using System.Text.RegularExpressions;
+﻿//-----------------------------------------------------------------------
+// <copyright file="UnitTest1.cs" company="FH Wiener Neustadt">
+//     Copyright (c) FH Wiener Neustadt. All rights reserved.
+// </copyright>
+// <author>Michael Füby, Armin Zimmerling, Mahmoud Ibrahim</author>
+// <summary>Legacy Unit Tests - See new test files for organized tests</summary>
+//-----------------------------------------------------------------------
+
+// ============================================================================
+// NOTE: This file contains legacy tests. 
+// For organized tests, see:
+//   - ParsingTests.cs    : Syntax/parsing validation
+//   - SemanticTests.cs   : Type checking and semantic analysis
+//   - RuntimeTests.cs    : Runtime execution and error handling
+//   - AlgorithmTests.cs  : Full program execution tests
+//   - TestSummary.cs     : Batch testing with summary reports
+// ============================================================================
+
+using System.Text.RegularExpressions;
 using Antlr4.Runtime;
 using Cool.Interpreter.Lib.Language.Interpretation;
 using NUnit.Framework;
 
 namespace Cool.Interpreter.Tests;
 
-public partial class Tests
+/// <summary>
+/// Legacy test class - kept for backward compatibility.
+/// New tests should be added to the appropriate specialized test class.
+/// </summary>
+[TestFixture]
+public partial class LegacyTests
 {
-    
-    private static readonly Dictionary<string, string> TestCases = [];
-    
     private const string TestFilesRoot = "TestCases";
+    private CoolInterpreter _interpreter = null!;
 
-    private CoolInterpreter _interpreter;
     [SetUp]
     public void Setup()
     {
         _interpreter = new CoolInterpreter();
     }
-    
-    [TestCaseSource(nameof(GetFailedParsingFiles))]
-    public void Parse_InvalidFile_ReturnsFailure(string filePath)
+
+    /// <summary>
+    /// Quick smoke test to verify the interpreter is working.
+    /// </summary>
+    [Test]
+    public void SmokeTest_SimpleProgram_Succeeds()
     {
         // Arrange
-        string sourceCode = File.ReadAllText(filePath);
-        string fileName = Path.GetFileName(filePath);
+        const string code = @"
+class Main {
+    main(): Int { 1 + 2 * 3 };
+};
+";
 
         // Act
-        var result = _interpreter.TestParsing(sourceCode, fileName);
+        var result = _interpreter.Run(code);
 
         // Assert
         Assert.Multiple(() =>
         {
-            Assert.That(result.HasErrors, Is.True, 
-                $"File '{fileName}' contains errors and should NOT parse successfully.");
+            Assert.That(result.IsSuccess, Is.True, "Simple program should succeed");
+            Assert.That(result.ReturnedValue, Is.EqualTo("7"));
         });
     }
 
+    /// <summary>
+    /// Quick smoke test for parsing.
+    /// </summary>
+    [Test]
+    public void SmokeTest_Parsing_Succeeds()
+    {
+        // Arrange
+        const string code = @"class Main { main(): Int { 0 }; };";
 
-    private static int EvaluateResult(string result)
-    {
-        var match = EvaluateParseResultRegex().Match(result);
-        return result.Contains("failed with") || result.Contains("error") ? 0 : int.Parse(match.Value);
-    }
-    
-    /// <summary>
-    /// Expected result is greater than 0 indicating successful parse and execution
-    /// </summary>
-    [Test]
-    public void TestSingleParseSuccess()
-    {
-        var input = File.ReadAllText("TestCases/Parsing/success/addedlet.cl");
-        var result = RunInterpreter(input, Path.GetFileNameWithoutExtension("TestCases/Parsing/success/addedlet.cl"));
-        Console.WriteLine("Result: " + result);
+        // Act
+        var result = _interpreter.TestParsing(code);
 
-        Assert.Multiple(() =>
-        {
-            Assert.That(EvaluateResult(result.ToString()), Is.GreaterThan(0));
-            Assert.That(result.IsSuccess, Is.True);
-        });
-    }
-    
-    /// <summary>
-    /// Expected result is 0 due to parse failure or a number of errors
-    /// </summary>
-    [Test]
-    public void TestSingleParseFail()
-    {
-        var input = File.ReadAllText("TestCases/Parsing/fail/baddispatch2.cl");
-        var result = RunInterpreter(input, Path.GetFileNameWithoutExtension("TestCases/Parsing/fail/baddispatch2.cl"));
-        Console.WriteLine("Result: " + result);
-        Assert.Multiple(() =>
-        {
-            Assert.That(EvaluateResult(result.ToString()), Is.EqualTo(0));
-            Assert.That(result.IsSuccess, Is.False);
-        });
-    }
-    
-    /// <summary>
-    /// Automatic testing of all test cases in a given category ["Algorithm", "Parsing", "Semantics"]
-    /// </summary>
-    [Test]
-    public void AutomaticTesting()
-    {
-        const string cat = "Parsing";
-        var testCases = LoadTestCaseByCategory(cat);
-        foreach (var testCase in testCases)
-        {
-            // during debugging: switch between only successful or failing cases
-            // if (testCase.Value.Contains("success")) continue;
-            
-            Console.Write("Running test case: " + testCase.Key);
-            
-            var input = File.ReadAllText(testCase.Key);
-            var expectedResult = testCase.Value == "success";
-            var actualResult = RunInterpreter(input);
-            
-            Assert.Multiple(() =>
-            {
-                switch (expectedResult)
-                {
-                    case false:
-                        Assert.That(EvaluateResult(actualResult.ToString()), Is.EqualTo(0), 
-                            $"Test case '{testCase.Key}' expected to fail.\nResult: {actualResult}");
-                        Assert.That(actualResult.IsSuccess, Is.False);
-                        Console.WriteLine(" - Passed");
-                        break;
-                    case true:
-                        Assert.That(EvaluateResult(actualResult.ToString()), Is.GreaterThan(0), 
-                            $"Test case '{testCase.Key}' expected to succeed. \nResult: {actualResult}");
-                        // Assert.That(actualResult.IsSuccess, Is.True);
-                        Console.WriteLine(" - Passed");
-                        break;
-                }
-            });
-        }
-    }
-    
-    private static Dictionary<string, string> LoadTestCaseByCategory(string category)
-    {
-        TestCases.Clear();
-        var testCases = Directory.GetFiles("TestCases", "*.cl", SearchOption.AllDirectories);
-        foreach (var testCase in testCases)
-        {
-            // get parent-parent directory name as category
-            var parentParentDir = Directory.GetParent(Directory.GetParent(testCase)?.FullName ?? "")?.Name ?? "unknown";
-            // get parent directory name as test status
-            var testStatus = Directory.GetParent(testCase)?.Name ?? "unknown";
-            if (parentParentDir == category)
-            {
-                TestCases.Add(testCase, testStatus);
-            }
-        }
-        return TestCases;
-    }
-    
-    private static IEnumerable<string> GetFailedParsingFiles()
-    {
-        var path = Path.Combine(TestContext.CurrentContext.TestDirectory, TestFilesRoot, "Parsing", "fail");
-        return Directory.GetFiles(path, "*.cl");
-    }
-    
-    private static InterpretationResult RunInterpreter(string input, string? sourceName = null)
-    {
-        try
-        {
-            var interpreter = new CoolInterpreter();
-            return interpreter.Run(input, sourceName);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-            throw;
-        }
+        // Assert
+        Assert.That(result.IsSuccess, Is.True);
     }
 
     /// <summary>
-    /// Get the number of output characters for successful parsing or 0 if failed
+    /// Quick smoke test for semantic analysis.
     /// </summary>
-    /// <returns></returns>
-    [GeneratedRegex(@"(?<=Output length:\s)\d+|(?<=failed with )\d+")]
-    private static partial Regex EvaluateParseResultRegex();
+    [Test]
+    public void SmokeTest_Semantics_Succeeds()
+    {
+        // Arrange
+        const string code = @"class Main { main(): Int { 0 }; };";
+
+        // Act
+        var result = _interpreter.TestSemantics(code);
+
+        // Assert
+        Assert.That(result.IsSuccess, Is.True);
+    }
 }
