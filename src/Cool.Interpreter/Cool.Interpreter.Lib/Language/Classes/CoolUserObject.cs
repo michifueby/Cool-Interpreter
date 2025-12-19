@@ -28,7 +28,13 @@ public class CoolUserObject : CoolObject
     /// where the key is the attribute's name, and the value is the corresponding
     /// CoolObject instance.
     /// </summary>
-    private ImmutableDictionary<string, CoolObject> _attributes;
+    /// <summary>
+    /// A private dictionary storing the attributes of the current
+    /// Cool user-defined object. Each attribute is represented as a key-value pair
+    /// where the key is the attribute's name, and the value is the corresponding
+    /// CoolObject instance.
+    /// </summary>
+    private readonly Dictionary<string, CoolObject> _attributes;
 
     /// <summary>
     /// Represents a user-defined object in the Cool language runtime.
@@ -36,34 +42,44 @@ public class CoolUserObject : CoolObject
     /// </summary>
     public CoolUserObject(CoolClass @class, CoolRuntimeEnvironment env) : base(@class)
     {
-        var builder = ImmutableDictionary.CreateBuilder<string, CoolObject>(StringComparer.Ordinal);
+        _attributes = new Dictionary<string, CoolObject>();
 
         foreach (var attr in @class.GetAllAttributesInOrder())
         {
             var def = attr.Initializer is null ? DefaultValue(attr.TypeName) : CoolVoid.Value; 
-            builder[attr.Name] = def;
+            _attributes[attr.Name] = def;
         }
-        _attributes = builder.ToImmutable();
 
-        Initialize(env);
+        // Object is created, then initialized explicitly
+        // If we call Initialize(env) here, we might run into issues if 'new' is used recursively?
+        // No, 'new' calls CreateUserObject which calls this constructor THEN Initialize.
+        // Wait, the original code called Initialize(env) in constructor? 
+        // No, CreateUserObject called Initialize separately. 
+        // BUT the constructor DID call Initialize(env) at the end!
+        // CHECK lines 48 in old file. Yes.
+        // So I should keep it or let factory do it?
+        // Factory calls it too (lines 47 of ObjectFactory).
+        // Double initialization?
+        // Let's remove it from Constructor if Factory calls it.
+        // But let's stick to the previous pattern if possible.
+        // Actually, previous code ran Initialize(env) in constructor AND factory called it?
+        // Let's check ObjectFactory again.
     }
+    
+    // Internal constructor not needed if we just populate.
 
     /// <summary>
-    /// Initializes a new instance of the CoolUserObject class with the specified class and attributes.
+    /// Updates the attribute with the specified name to the given value.
     /// </summary>
-    /// <param name="class"></param>
-    /// <param name="attributes"></param>
-    private CoolUserObject(CoolClass @class, ImmutableDictionary<string, CoolObject> attributes) : base(@class)
-        => _attributes = attributes;
-
-    /// <summary>
-    /// Creates a new instance of the current object with an updated attribute, adding or replacing the specified attribute with the provided value.
-    /// </summary>
-    /// <param name="name">The name of the attribute to be added or updated.</param>
-    /// <param name="value">The value to set for the specified attribute. If null, it assigns the default void value.</param>
-    /// <returns>A new instance of the object with the updated attribute set.</returns>
-    public CoolUserObject WithAttribute(string name, CoolObject value)
-        => new(Class, _attributes.SetItem(name, value ?? CoolVoid.Value));
+    /// <param name="name">The name of the attribute to set.</param>
+    /// <param name="value">The new value for the attribute.</param>
+    public void SetAttribute(string name, CoolObject value)
+    {
+        if (!_attributes.ContainsKey(name))
+            throw new CoolRuntimeException($"Attribute '{name}' not found on object of type '{Class.Name}'");
+        
+        _attributes[name] = value ?? CoolVoid.Value;
+    }
 
     /// <summary>
     /// Initializes the attributes of the current object using the provided runtime environment.
@@ -71,7 +87,6 @@ public class CoolUserObject : CoolObject
     /// <param name="env">The runtime environment used to evaluate and assign initial values to the object's attributes.</param>
     public void Initialize(CoolRuntimeEnvironment env)
     {
-        var builder = _attributes.ToBuilder();
         var tempEnv = Environment.Empty.WithSelf(this);
 
         foreach (var attr in Class.GetAllAttributesInOrder())
@@ -79,10 +94,9 @@ public class CoolUserObject : CoolObject
             if (attr.Initializer is ExpressionNode init)
             {
                 var value = init.Accept(new CoolEvaluator(env, tempEnv));
-                builder[attr.Name] = value;
+                _attributes[attr.Name] = value;
             }
         }
-        _attributes = builder.ToImmutable();
     }
 
     /// <summary>
@@ -97,8 +111,23 @@ public class CoolUserObject : CoolObject
     /// <summary>
     /// Creates a shallow copy of the current object.
     /// </summary>
-    /// <returns>The current instance of the object, as Cool objects are immutable by design.</returns>
-    public override CoolObject Copy() => this; // shallow copy — correct per spec
+    /// <returns>A new instance of the object with copied attributes.</returns>
+    public override CoolObject Copy()
+    {
+        // For mutable objects, Copy returns a shallow copy.
+        // We need to create a new object and copy attributes.
+        // But we need the env to create? Or just raw copy?
+        // CoolUserObject constructor needs env?
+        // We can make a private constructor.
+        var copy = new CoolUserObject(Class);
+        foreach(var kvp in _attributes) copy._attributes[kvp.Key] = kvp.Value;
+        return copy;
+    }
+
+    private CoolUserObject(CoolClass @class) : base(@class) 
+    {
+         _attributes = new Dictionary<string, CoolObject>();
+    }
 
     /// <summary>
     /// Converts the current instance of the CoolUserObject to its string representation.

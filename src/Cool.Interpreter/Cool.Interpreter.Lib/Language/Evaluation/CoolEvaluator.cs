@@ -15,6 +15,7 @@ using Cool.Interpreter.Lib.Core.Syntax.Ast;
 using Cool.Interpreter.Lib.Core.Syntax.Ast.Expressions;
 using Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
 using Cool.Interpreter.Lib.Core.Syntax.Operators;
+using Cool.Interpreter.Lib.Core.Diagnostics;
 using Cool.Interpreter.Lib.Language.Classes;
 using Cool.Interpreter.Lib.Language.Classes.BuiltIn;
 using Cool.Interpreter.Lib.Language.Symbols;
@@ -176,13 +177,22 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     {
         var value = node.Expression.Accept(this);
 
-        if (_env.Self is not CoolUserObject selfObj)
-            throw new CoolRuntimeException("assignment outside object context");
+        // 1. Try to update local variable (let bindings, parameters)
+        if (_env.Locals.ContainsKey(node.Identifier))
+        {
+            _env = _env.WithLocal(node.Identifier, value);
+            return value;
+        }
 
-        var newSelf = selfObj.WithAttribute(node.Identifier, value);
-        _env = _env.WithSelf(newSelf);
-
-        return value; // Cool spec 6
+        // 2. Update attribute of 'self'
+        if (_env.Self is CoolUserObject selfObj)
+        {
+            selfObj.SetAttribute(node.Identifier, value);
+            return value;
+        }
+        
+        // 3. Error
+        throw new CoolRuntimeException($"Assignment to undefined variable {node.Identifier}", CoolErrorCodes.AssignToUndefinedAttribute);
     }
 
     /// <summary>
@@ -381,7 +391,7 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
             (BinaryOperator.Multiply, CoolInt a, CoolInt b) => new CoolInt(a.Value * b.Value),
             
             (BinaryOperator.Divide, CoolInt a, CoolInt b) =>
-                b.Value == 0 ? throw new CoolRuntimeException("Division by zero")
+                b.Value == 0 ? throw new CoolRuntimeException("Division by zero", CoolErrorCodes.DivisionByZero)
                              : new CoolInt(a.Value / b.Value),
             
             (BinaryOperator.LessThan, CoolInt a, CoolInt b) => CoolBool.From(a.Value < b.Value),

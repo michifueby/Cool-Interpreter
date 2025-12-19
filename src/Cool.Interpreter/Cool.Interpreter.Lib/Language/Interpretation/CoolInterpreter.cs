@@ -108,33 +108,22 @@ public class CoolInterpreter : IInterpreter
             var evaluator = new CoolEvaluator(runtimeEnv);
             returnedValue = evaluator.Evaluate(parseResult.SyntaxTree);
         }
-        catch (CoolRuntimeException ex) when (ex.Message.Contains("division by zero"))
-        {
-            executionDiagnostics.ReportError(
-                SourcePosition.None,
-                CoolErrorCodes.DivisionByZero,
-                ex.Message);
-        }
-        catch (CoolRuntimeException ex) when (ex.Message.Contains("substr"))
-        {
-            executionDiagnostics.ReportError(
-                SourcePosition.None,
-                CoolErrorCodes.SubstrOutOfRange,
-                ex.Message);
-        }
-        catch (CoolRuntimeException ex) when (ex.Message.Contains("abort"))
-        {
-            executionDiagnostics.ReportError(
-                SourcePosition.None,
-                CoolErrorCodes.AbortCalled,
-                ex.Message);
-        }
         catch (CoolRuntimeException ex)
         {
-            // Generic runtime error from user code
+            var code = ex.ErrorCode;
+
+            // Fallback for legacy exceptions without specific codes
+            if (code is null)
+            {
+                if (ex.Message.Contains("division by zero")) code = CoolErrorCodes.DivisionByZero;
+                else if (ex.Message.Contains("substr")) code = CoolErrorCodes.SubstrOutOfRange;
+                else if (ex.Message.Contains("abort")) code = CoolErrorCodes.AbortCalled;
+                else code = CoolErrorCodes.RuntimeError;
+            }
+
             executionDiagnostics.ReportError(
-                SourcePosition.None,
-                CoolErrorCodes.RuntimeError,
+                ex.Location ?? SourcePosition.None,
+                code,
                 ex.Message);
         }
         catch (Exception ex)

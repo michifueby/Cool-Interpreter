@@ -20,13 +20,20 @@ using Cool.Interpreter.Lib.Core.Syntax;
 public sealed class CoolRuntimeException : Exception
 {
     /// <summary>
+    /// Gets the error code associated with this runtime exception.
+    /// Used for precise error reporting and testing.
+    /// </summary>
+    public string? ErrorCode { get; }
+
+    /// <summary>
     /// Represents a runtime exception that occurs during the interpretation of Cool programs.
     /// This exception provides detailed error information, including the source location
     /// for IDE-quality error reporting.
     /// </summary>
-    public CoolRuntimeException(string message)
+    public CoolRuntimeException(string message, string? errorCode = null)
         : base(message)
     {
+        ErrorCode = errorCode;
     }
 
     /// <summary>
@@ -34,18 +41,22 @@ public sealed class CoolRuntimeException : Exception
     /// This exception provides detailed error information, including optional source location,
     /// facilitating precise error tracking and IDE-quality reporting.
     /// </summary>
-    public CoolRuntimeException(string message, SourcePosition location)
+    public CoolRuntimeException(string message, SourcePosition location, string? errorCode = null)
         : base(BuildMessage(message, location))
-        => Location = location;
+    {
+        Location = location;
+        ErrorCode = errorCode;
+    }
 
     /// <summary>
     /// Represents a runtime exception that occurs during the interpretation of Cool programs.
     /// This exception provides detailed error information, including the source location
     /// for IDE-quality error reporting.
     /// </summary>
-    public CoolRuntimeException(string message, Exception inner)
+    public CoolRuntimeException(string message, Exception inner, string? errorCode = null)
         : base(message, inner)
     {
+        ErrorCode = errorCode;
     }
     
     /// <summary>
