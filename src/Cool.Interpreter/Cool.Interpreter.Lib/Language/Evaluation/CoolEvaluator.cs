@@ -426,14 +426,14 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
             "type_name"  => new CoolString(self.Class.Name),
             "copy"       => self.Copy(),
 
-            "out_string" when self is CoolIo && args.Length == 1 && args[0] is CoolString s =>
+            "out_string" when InheritsFromIo(self) && args.Length == 1 && args[0] is CoolString s =>
                 _runtime.Io.OutString(s),
 
-            "out_int" when self is CoolIo && args.Length == 1 && args[0] is CoolInt i =>
+            "out_int" when InheritsFromIo(self) && args.Length == 1 && args[0] is CoolInt i =>
                 _runtime.Io.OutInt(i),
 
-            "in_string" when self is CoolIo => _runtime.Io.InString(),
-            "in_int" when self is CoolIo => _runtime.Io.InInt(),
+            "in_string" when InheritsFromIo(self) => _runtime.Io.InString(),
+            "in_int" when InheritsFromIo(self) => _runtime.Io.InInt(),
 
             "length" when self is CoolString s => new CoolInt(s.Value.Length),
 
@@ -445,6 +445,21 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
 
             _ => throw new CoolRuntimeException($"Unknown builtin {node.Name}")
         };
+    }
+
+    /// <summary>
+    /// Checks whether the given CoolObject inherits from IO (directly or indirectly).
+    /// </summary>
+    private static bool InheritsFromIo(CoolObject obj)
+    {
+        if (obj is CoolIo) return true;
+        var cls = obj.Class;
+        while (cls != null)
+        {
+            if (cls.Name == "IO") return true;
+            cls = cls.Parent;
+        }
+        return false;
     }
 
     // Declaration nodes – never reached at runtime

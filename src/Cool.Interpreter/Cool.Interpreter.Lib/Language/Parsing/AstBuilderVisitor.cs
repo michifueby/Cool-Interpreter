@@ -361,11 +361,31 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     public override object? VisitLetIn(CoolParser.LetInContext context)
     {
         var bindings = context.property()
-            .Select((p, i) => Visit(p, i) as LetBindingNode)
+            .Select(VisitPropertyAsLetBinding)
             .ToImmutableArray();
 
         var body = Visit(context.expression()) as ExpressionNode;
         return new LetNode(bindings, body, ToSourcePosition(context.Start));
+    }
+
+    /// <summary>
+    /// Visits a property context and creates a <see cref="LetBindingNode"/> for use in let expressions.
+    /// </summary>
+    /// <param name="context">The property context from the parser.</param>
+    /// <returns>A <see cref="LetBindingNode"/> representing the let binding.</returns>
+    private LetBindingNode VisitPropertyAsLetBinding(CoolParser.PropertyContext context)
+    {
+        var formal = context.formal();
+        var name = formal.ID().GetText();
+        var typeName = formal.TYPE().GetText();
+
+        ExpressionNode? initializer = context.ASSIGNMENT() is not null
+            ? Visit(context.expression()) as ExpressionNode
+            : null;
+
+        var location = ToSourcePosition(context.Start);
+
+        return new LetBindingNode(name, typeName, initializer, location);
     }
 
     /// <summary>

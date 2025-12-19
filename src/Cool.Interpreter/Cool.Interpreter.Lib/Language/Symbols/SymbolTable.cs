@@ -73,30 +73,38 @@ public class SymbolTable
     {
         var builder = ImmutableDictionary.CreateBuilder<string, ClassSymbol>(StringComparer.Ordinal);
 
-        // Built-in classes — no AST definition available (and not needed)
-        AddBuiltin(builder, "Object");
-        AddBuiltin(builder, "IO", "Object");
-        AddBuiltin(builder, "Int", "Object");
-        AddBuiltin(builder, "String", "Object");
-        AddBuiltin(builder, "Bool", "Object");
+        // Built-in classes with their methods — no AST definition available (and not needed)
+        
+        // Object: abort(), type_name(), copy()
+        var objectClass = new ClassSymbol("Object", null, SourcePosition.None)
+            .WithMethod(MethodSymbol.CreateBuiltin("abort", "Object"))
+            .WithMethod(MethodSymbol.CreateBuiltin("type_name", "String"))
+            .WithMethod(MethodSymbol.CreateBuiltin("copy", "SELF_TYPE"));
+        builder.Add("Object", objectClass);
+
+        // IO: out_string(x), out_int(x), in_string(), in_int()
+        var ioClass = new ClassSymbol("IO", "Object", SourcePosition.None)
+            .WithMethod(MethodSymbol.CreateBuiltin("out_string", "SELF_TYPE", ("x", "String")))
+            .WithMethod(MethodSymbol.CreateBuiltin("out_int", "SELF_TYPE", ("x", "Int")))
+            .WithMethod(MethodSymbol.CreateBuiltin("in_string", "String"))
+            .WithMethod(MethodSymbol.CreateBuiltin("in_int", "Int"));
+        builder.Add("IO", ioClass);
+
+        // Int: no additional methods beyond Object
+        var intClass = new ClassSymbol("Int", "Object", SourcePosition.None);
+        builder.Add("Int", intClass);
+
+        // String: length(), concat(s), substr(i, l)
+        var stringClass = new ClassSymbol("String", "Object", SourcePosition.None)
+            .WithMethod(MethodSymbol.CreateBuiltin("length", "Int"))
+            .WithMethod(MethodSymbol.CreateBuiltin("concat", "String", ("s", "String")))
+            .WithMethod(MethodSymbol.CreateBuiltin("substr", "String", ("i", "Int"), ("l", "Int")));
+        builder.Add("String", stringClass);
+
+        // Bool: no additional methods beyond Object
+        var boolClass = new ClassSymbol("Bool", "Object", SourcePosition.None);
+        builder.Add("Bool", boolClass);
 
         return new SymbolTable(builder.ToImmutable());
-    }
-
-    /// <summary>
-    /// Adds a built-in class to the given symbol table builder.
-    /// </summary>
-    /// <param name="builder">The builder for the immutable dictionary of classes.</param>
-    /// <param name="name">The name of the built-in class to add.</param>
-    /// <param name="parent">The name of the parent class for the built-in class, or null if there is no parent.</param>
-    private static void AddBuiltin(
-        ImmutableDictionary<string, ClassSymbol>.Builder builder,
-        string name,
-        string? parent = null)
-    {
-        // Use the parameterless constructor (which now delegates to the main one with Definition = null!)
-        // This is safe for built-ins because RuntimeClassFactory will short-circuit them anyway.
-        var symbol = new ClassSymbol(name, parent, SourcePosition.None);
-        builder.Add(name, symbol);
     }
 }

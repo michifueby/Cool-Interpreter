@@ -74,7 +74,7 @@ public static class PredefinedClasses
     /// for basic input and output operations.
     /// </summary>
     public static readonly CoolClass Io = new(
-        name: "Io",
+        name: "IO",
         parent: Object,
         methods: CreateIoMethods(),
         attributes: ImmutableDictionary<string, AttributeNode>.Empty);
@@ -89,7 +89,7 @@ public static class PredefinedClasses
             ["Int"]    = Int,
             ["String"] = String,
             ["Bool"]   = Bool,
-            ["Io"]     = Io
+            ["IO"]     = Io
         }.AsReadOnly();
 
     /// <summary>

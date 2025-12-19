@@ -11,6 +11,7 @@ namespace Cool.Interpreter.Lib.Language.Analysis.Checker;
 using System.Collections.Immutable;
 using Cool.Interpreter.Lib.Core.Diagnostics;
 using Cool.Interpreter.Lib.Core.Syntax.Ast;
+using Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
 using Cool.Interpreter.Lib.Language.Symbols;
 using Cool.Interpreter.Lib.Core.Syntax;
 
@@ -93,7 +94,8 @@ public class InheritanceChecker
         foreach (var classNode in program.Classes)
         {
             var className   = classNode.Name;
-            var parentName  = classNode.InheritsFrom;
+            // In Cool, all classes implicitly inherit from Object if no parent is specified
+            var parentName  = classNode.InheritsFrom ?? "Object";
             var location    = classNode.Location;
 
             // Duplicate class?
@@ -131,6 +133,34 @@ public class InheritanceChecker
                 parentName: parentName,
                 definition: classNode,
                 location: location);
+
+            // Populate methods and attributes from class features
+            foreach (var feature in classNode.Features)
+            {
+                switch (feature)
+                {
+                    case MethodNode method:
+                        var formals = method.Formals
+                            .Select(f => new FormalSymbol(f.Name, f.TypeName))
+                            .ToImmutableList();
+                        var methodSymbol = MethodSymbol.Create(
+                            method.Name,
+                            method.ReturnTypeName,
+                            formals,
+                            method.Location);
+                        classSymbol = classSymbol.WithMethod(methodSymbol);
+                        break;
+
+                    case AttributeNode attr:
+                        var attrSymbol = new AttributeSymbol(
+                            attr.Name,
+                            attr.TypeName,
+                            attr.Initializer,
+                            attr.Location);
+                        classSymbol = classSymbol.WithAttribute(attrSymbol);
+                        break;
+                }
+            }
 
             currentTable = currentTable.WithClass(classSymbol);
         }
