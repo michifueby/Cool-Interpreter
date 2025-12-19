@@ -57,6 +57,12 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     public CoolEvaluator(CoolRuntimeEnvironment runtime) 
         => _runtime = runtime;
 
+    public CoolEvaluator(CoolRuntimeEnvironment runtime, Environment env)
+    {
+        _runtime = runtime;
+        _env = env;
+    }
+
     public CoolObject Evaluate(ProgramNode program)
     {
         // 1. Find Main class symbol

@@ -143,7 +143,7 @@ public class CoolInterpreter : IInterpreter
             executionDiagnostics.ReportError(
                 SourcePosition.None,
                 CoolErrorCodes.InternalInterpreterError,
-                $"Internal interpreter error: {ex.Message}");
+                $"Internal interpreter error: {ex.ToString()}");
         }
         
         // Phase 3: Return result

@@ -78,7 +78,7 @@ public class CoolUserObject : CoolObject
         {
             if (attr.Initializer is ExpressionNode init)
             {
-                var value = init.Accept(new CoolEvaluator(env));
+                var value = init.Accept(new CoolEvaluator(env, tempEnv));
                 builder[attr.Name] = value;
             }
         }
@@ -106,8 +106,8 @@ public class CoolUserObject : CoolObject
     /// <returns>A string representation of the object, including the class name and its attributes in the format "<ClassName {attr1=value1, attr2=value2}>".</returns>
     public override string ToString()
     {
-        var attrs = string.Join(", ", _attributes.Select(kv => $"{kv.Key}={kv.Value.AsString()}"));
-        return $"<{Class.Name} {{{attrs}}}>";
+        // Avoid printing attributes to prevent infinite recursion if object refers to itself
+        return $"<{Class.Name}>";
     }
 
     /// <summary>

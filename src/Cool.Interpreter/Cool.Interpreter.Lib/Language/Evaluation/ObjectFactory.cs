@@ -43,8 +43,16 @@ public static class ObjectFactory
     /// <returns>A fully initialized instance of CoolUserObject, adhering to the specified class definition.</returns>
     private static CoolUserObject CreateUserObject(CoolClass @class, CoolRuntimeEnvironment env)
     {
-        var obj = new CoolUserObject(@class, env);
-        obj.Initialize(env);
+        if (env.StackDepth > CoolRuntimeEnvironment.MaxStackDepth)
+        {
+            throw new Cool.Interpreter.Lib.Core.Exeptions.CoolRuntimeException(
+                "Stack overflow: maximum recursion depth exceeded.", 
+                Cool.Interpreter.Lib.Core.Syntax.SourcePosition.None);
+        }
+
+        var nextEnv = env.WithStackDepth(env.StackDepth + 1);
+        var obj = new CoolUserObject(@class, nextEnv);
+        obj.Initialize(nextEnv);
         return obj;
     }
 }
