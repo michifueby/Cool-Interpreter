@@ -44,26 +44,16 @@ public class CoolUserObject : CoolObject
     {
         _attributes = new Dictionary<string, CoolObject>();
 
+        // First, initialize ALL attributes to their default values
+        // This ensures that self-referential initializers (like x <- x + 1) 
+        // can access the attribute with its default value
         foreach (var attr in @class.GetAllAttributesInOrder())
         {
-            var def = DefaultValue(attr.TypeName);
-            _attributes[attr.Name] = def;
+            _attributes[attr.Name] = DefaultValue(attr.TypeName);
         }
 
-        // Object is created, then initialized explicitly
-        // If we call Initialize(env) here, we might run into issues if 'new' is used recursively?
-        // No, 'new' calls CreateUserObject which calls this constructor THEN Initialize.
-        // Wait, the original code called Initialize(env) in constructor? 
-        // No, CreateUserObject called Initialize separately. 
-        // BUT the constructor DID call Initialize(env) at the end!
-        // CHECK lines 48 in old file. Yes.
-        // So I should keep it or let factory do it?
-        // Factory calls it too (lines 47 of ObjectFactory).
-        // Double initialization?
-        // Let's remove it from Constructor if Factory calls it.
-        // But let's stick to the previous pattern if possible.
-        // Actually, previous code ran Initialize(env) in constructor AND factory called it?
-        // Let's check ObjectFactory again.
+        // Object is created, then initialized explicitly via Initialize()
+        // Factory calls Initialize() after construction
     }
     
     // Internal constructor not needed if we just populate.
@@ -107,6 +97,14 @@ public class CoolUserObject : CoolObject
     /// <exception cref="CoolRuntimeException">Thrown if the specified attribute does not exist.</exception>
     public CoolObject GetAttribute(string name)
         => _attributes.TryGetValue(name, out var v) ? v : throw new CoolRuntimeException($"No attribute {name}");
+
+    /// <summary>
+    /// Checks whether an attribute with the specified name exists on this object.
+    /// </summary>
+    /// <param name="name">The name of the attribute to check.</param>
+    /// <returns>True if the attribute exists; otherwise, false.</returns>
+    public bool HasAttribute(string name)
+        => _attributes.ContainsKey(name);
 
     /// <summary>
     /// Creates a shallow copy of the current object.

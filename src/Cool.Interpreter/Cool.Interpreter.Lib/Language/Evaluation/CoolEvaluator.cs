@@ -159,13 +159,36 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     /// <summary>
     /// Evaluates the given <see cref="IdentifierExpressionNode"/> by retrieving the corresponding
     /// <see cref="CoolObject"/> from the environment using the identifier provided in the node.
+    /// In Cool, if the identifier is not found as a variable, it may be a zero-argument method call on self.
     /// </summary>
     /// <param name="node">The <see cref="IdentifierExpressionNode"/> containing the identifier for which
     /// the corresponding value will be looked up in the environment.</param>
     /// <returns>The <see cref="CoolObject"/> associated with the identifier in the provided
     /// <see cref="IdentifierExpressionNode"/>.</returns>
-    public CoolObject Visit(IdentifierExpressionNode node) 
-        => _env.Lookup(node.Identifier);
+    public CoolObject Visit(IdentifierExpressionNode node)
+    {
+        // First, try to look up the identifier as a local variable, attribute, or self
+        if (node.Identifier == "self")
+            return _env.Self;
+        
+        if (_env.Locals.TryGetValue(node.Identifier, out var local))
+            return local;
+            
+        if (_env.Self is CoolUserObject userObj && userObj.HasAttribute(node.Identifier))
+            return userObj.GetAttribute(node.Identifier);
+        
+        // In Cool, an identifier without parentheses may also be a zero-argument method call on self.
+        // This is syntactic sugar for self.methodName().
+        var method = FindMethodInHierarchy(_env.Self.Class, node.Identifier, 0);
+        if (method != null)
+        {
+            // Call the method with no arguments on self
+            Environment activationFrame = Environment.Empty.WithSelf(_env.Self);
+            return StartEvaluation(method.Body, activationFrame);
+        }
+        
+        throw new CoolRuntimeException($"Undefined identifier: {node.Identifier}");
+    }
 
     /// <summary>
     /// Evaluates the given <see cref="AssignNode"/> by executing its expression and updating the corresponding object's attribute in the environment.
@@ -199,26 +222,35 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     /// Creates a new instance of a CoolObject based on the given type from a NewNode.
     /// </summary>
     /// <param name="node">The NewNode containing the type name for which a new CoolObject instance needs to be created.
-    /// Valid type names include "Int", "String", "Bool", "IO", "Object", and custom user-defined types.</param>
+    /// Valid type names include "Int", "String", "Bool", "IO", "Object", "SELF_TYPE", and custom user-defined types.</param>
     /// <returns>A CoolObject instance corresponding to the specified type name. For the built-in types, it returns:
     /// <see cref="CoolInt.Zero"/> for "Int", <see cref="CoolString.Empty"/> for "String", and <see cref="CoolBool.False"/> for "Bool".
+    /// For SELF_TYPE, it creates a new instance of the same class as the current 'self' object.
     /// For user-defined types, it creates and returns a new instance using the object factory.</returns>
-    public CoolObject Visit(NewNode node) => node.TypeName switch
+    public CoolObject Visit(NewNode node)
     {
-        "Int" => CoolInt.Zero,
-        
-        "String" => CoolString.Empty,
-        
-        "Bool"   => CoolBool.False,
-        
-        "IO"     => _runtime.Io,
-        
-        "Object" => _runtime.ObjectRoot,
+        // Resolve the actual type name (handle SELF_TYPE)
+        string actualTypeName = node.TypeName == "SELF_TYPE" 
+            ? _env.Self.Class.Name 
+            : node.TypeName;
 
-        "SELF_TYPE" => ObjectFactory.Create(_env.Self.Class, _runtime),
-        
-        _ => ObjectFactory.Create(RuntimeClassFactory.FromSymbol(_runtime.SymbolTable.GetClass(node.TypeName), _runtime), _runtime)
-    };
+        return actualTypeName switch
+        {
+            "Int" => CoolInt.Zero,
+            
+            "String" => CoolString.Empty,
+            
+            "Bool" => CoolBool.False,
+            
+            "IO" => _runtime.Io,
+            
+            "Object" => _runtime.ObjectRoot,
+            
+            _ => ObjectFactory.Create(
+                RuntimeClassFactory.FromSymbol(_runtime.SymbolTable.GetClass(actualTypeName), _runtime), 
+                _runtime)
+        };
+    }
 
     /// <summary>
     /// Evaluates the given <see cref="DispatchNode"/> by invoking the specified method on the receiver object
@@ -232,8 +264,11 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     public CoolObject Visit(DispatchNode node)
     {
         // 1. Evaluate the receiver (the object on which the method is called)
-        CoolObject receiver = node.Caller.Accept(this)
-                              ?? throw new CoolRuntimeException("Dispatch receiver evaluated to void");
+        CoolObject receiver = node.Caller.Accept(this);
+        
+        // Check for dispatch on void (runtime error in Cool)
+        if (receiver is null || receiver is CoolVoid)
+            throw new CoolRuntimeException("Dispatch on void");
 
         // 2. Evaluate all actual arguments
         CoolObject[] actualArgs = node.Arguments
@@ -330,9 +365,10 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
 
         foreach (var b in node.Bindings)
         {
+            // Evaluate the initializer in the context that includes previous bindings
             var value = b.Initializer is null
                 ? DefaultValue(b.TypeName)
-                : b.Initializer.Accept(this);
+                : StartEvaluation(b.Initializer, frame);
             frame = frame.WithLocal(b.Identifier, value);
         }
         
@@ -341,7 +377,7 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
 
     /// <summary>
     /// Evaluates the given <see cref="CaseNode"/> by matching the provided scrutinee against
-    /// the branches defined in the case expression and returning the result of the first matching branch.
+    /// the branches defined in the case expression and returning the result of the most specific matching branch.
     /// </summary>
     /// <param name="node">The <see cref="CaseNode"/> representing the case expression to evaluate.</param>
     /// <returns>A <see cref="CoolObject"/> resulting from the evaluation of the matching branch body.</returns>
@@ -352,13 +388,28 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     {
         var value = node.Scrutinee.Accept(this);
 
+        // Handle void scrutinee - this is a runtime error in Cool
+        if (value is CoolVoid)
+            throw new CoolRuntimeException("case on void", CoolErrorCodes.CaseOnVoid);
+
+        // Find the most specific matching branch (smallest inheritance distance)
+        CaseBranchNode? bestBranch = null;
+        int bestDistance = int.MaxValue;
+
         foreach (var branch in node.Branches)
         {
-            if (Conforms(value.Class.Name, branch.TypeName, _runtime.SymbolTable))
-                return StartEvaluation(branch.Body, _env.WithLocal(branch.Identifier, value));
+            int distance = InheritanceDistance(value.Class.Name, branch.TypeName, _runtime.SymbolTable);
+            if (distance >= 0 && distance < bestDistance)
+            {
+                bestDistance = distance;
+                bestBranch = branch;
+            }
         }
+
+        if (bestBranch is null)
+            throw new CoolRuntimeException("case: no matching branch");
         
-        throw new CoolRuntimeException("case: no matching branch");
+        return StartEvaluation(bestBranch.Body, _env.WithLocal(bestBranch.Identifier, value));
     }
 
     /// <summary>
@@ -588,5 +639,34 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
             if (cls?.Name == expected) return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Calculates the inheritance distance from the actual class to the expected class.
+    /// Returns -1 if the actual class does not conform to the expected class.
+    /// Returns 0 if they are the same class, 1 if expected is a direct parent, etc.
+    /// </summary>
+    /// <param name="actual">The name of the runtime class.</param>
+    /// <param name="expected">The name of the branch type to match.</param>
+    /// <param name="st">The symbol table for class lookup.</param>
+    /// <returns>The inheritance distance, or -1 if no match.</returns>
+    private static int InheritanceDistance(string actual, string expected, SymbolTable st)
+    {
+        if (actual == expected) return 0;
+        
+        int distance = 1;
+        var cls = st.GetClass(actual);
+        
+        while (cls?.ParentName is not null)
+        {
+            if (cls.ParentName == expected) return distance;
+            cls = st.GetClass(cls.ParentName);
+            distance++;
+        }
+        
+        // Check if we reached Object (which has null ParentName)
+        if (cls?.Name == expected) return distance;
+        
+        return -1; // No match found
     }
 }

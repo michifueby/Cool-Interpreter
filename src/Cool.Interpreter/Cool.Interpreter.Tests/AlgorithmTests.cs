@@ -36,6 +36,7 @@ public class AlgorithmTests
     /// Tests that files in Algorithm/fail directory fail during execution.
     /// </summary>
     [TestCaseSource(nameof(GetAlgorithmFailFiles))]
+    [Timeout(120000)] // 120 second timeout per test
     public void Algorithm_InvalidFile_Fails(string filePath)
     {
         // Arrange
@@ -56,6 +57,7 @@ public class AlgorithmTests
     /// Tests that files in Algorithm/success directory execute successfully.
     /// </summary>
     [TestCaseSource(nameof(GetAlgorithmSuccessFiles))]
+    [Timeout(120000)] // 2 Minutes timeout per test
     public void Algorithm_ValidFile_Succeeds(string filePath)
     {
         // Arrange

@@ -8,6 +8,7 @@
 
 namespace Cool.Interpreter.Lib.Language.Evaluation;
 
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Linq;
 using Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
@@ -23,7 +24,20 @@ using Cool.Interpreter.Lib.Language.Symbols;
 public static class RuntimeClassFactory
 {
     /// <summary>
+    /// Cache for user-defined runtime classes to avoid repeated creation.
+    /// Key is the class name, value is the constructed CoolClass.
+    /// </summary>
+    private static readonly ConcurrentDictionary<string, CoolClass> _classCache = new();
+
+    /// <summary>
+    /// Clears the runtime class cache. Should be called between interpreter runs
+    /// to ensure clean state.
+    /// </summary>
+    public static void ClearCache() => _classCache.Clear();
+
+    /// <summary>
     /// Creates a new instance of <see cref="CoolClass"/> from the provided <see cref="ClassSymbol"/> and runtime environment.
+    /// Uses caching to avoid repeated creation of the same runtime class.
     /// </summary>
     /// <param name="symbol">The <see cref="ClassSymbol"/> representing the class to be instantiated.</param>
     /// <param name="env">The <see cref="CoolRuntimeEnvironment"/> providing the runtime context.</param>
@@ -34,6 +48,12 @@ public static class RuntimeClassFactory
         if (PredefinedClasses.ByName.TryGetValue(symbol.Name, out var predefinedClass))
         {
             return predefinedClass;
+        }
+
+        // Check cache first to avoid repeated class construction
+        if (_classCache.TryGetValue(symbol.Name, out var cachedClass))
+        {
+            return cachedClass;
         }
 
         // Otherwise, it's a user-defined class — build it from the symbol
@@ -54,10 +74,14 @@ public static class RuntimeClassFactory
             .OfType<AttributeNode>()
             .ToImmutableDictionary(a => a.Name, a => a);
 
-        return new CoolClass(
+        var newClass = new CoolClass(
             name: symbol.Name,
             parent: parent,
             methods: methods,
             attributes: attributes);
+
+        // Cache and return the new class
+        _classCache.TryAdd(symbol.Name, newClass);
+        return newClass;
     }
 }

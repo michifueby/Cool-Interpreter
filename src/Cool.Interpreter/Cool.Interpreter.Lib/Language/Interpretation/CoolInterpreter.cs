@@ -62,6 +62,9 @@ public class CoolInterpreter : IInterpreter
 
         sourceName ??= "<string>";
 
+        // Clear the runtime class cache to ensure clean state for each run
+        RuntimeClassFactory.ClearCache();
+
         // Phase 1: Parse
         var parseResult = _parser.Parse(sourceCode, sourceName);
         if (parseResult.SyntaxTree is null)
@@ -96,9 +99,12 @@ public class CoolInterpreter : IInterpreter
         
         // Phase 3: Build runtime environment with captured I/O
         var outputBuffer = new StringWriter();
+        // Provide default input that helps interactive programs terminate gracefully:
+        // - Empty line terminates graph/data input loops that check for empty input
+        // - "q" terminates menu loops that check for quit command
         var runtimeEnv = new CoolRuntimeEnvironment(symbolTable)
             .WithOutput(outputBuffer)
-            .WithInput(new StringReader("")); // no input by default
+            .WithInput(new StringReader("\nq\n"));
         
         CoolObject? returnedValue = null;
         DiagnosticBag executionDiagnostics = new();

@@ -237,6 +237,11 @@ public static class CoolErrorCodes
     public const string DispatchOnVoid = "COOL0306";
 
     /// <summary>
+    /// Runtime error: case expression evaluated on a void value.
+    /// </summary>
+    public const string CaseOnVoid = "COOL0307";
+
+    /// <summary>
     /// Runtime error: internal interpreter bug — should never happen in correct programs.
     /// </summary>
     public const string InternalInterpreterError = "COOL0399";

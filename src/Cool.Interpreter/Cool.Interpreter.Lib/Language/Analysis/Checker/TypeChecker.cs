@@ -339,15 +339,22 @@ public class TypeChecker
             }
         }
 
-        return GetMethodReturnType(lookupType, node.MethodName, node.Arguments, node.Location);
+        // Note: dispatchType is passed for SELF_TYPE resolution - even with static dispatch,
+        // SELF_TYPE resolves to the type of the caller expression, not the static dispatch type.
+        return GetMethodReturnType(lookupType, node.MethodName, node.Arguments, node.Location, dispatchType);
     }
 
     /// <summary>
     /// Determines the return type of a specified method within a given class, verifying its existence,
     /// checking method arguments, and resolving the actual return type or reporting errors if necessary.
     /// </summary>
+    /// <param name="className">The class in which to look up the method</param>
+    /// <param name="methodName">The name of the method</param>
+    /// <param name="args">The arguments to the method</param>
+    /// <param name="pos">The source location for error reporting</param>
+    /// <param name="selfTypeResolution">The type to use when resolving SELF_TYPE (typically the receiver's type)</param>
     private string GetMethodReturnType(string className, string methodName,
-        IReadOnlyList<ExpressionNode> args, SourcePosition pos)
+        IReadOnlyList<ExpressionNode> args, SourcePosition pos, string? selfTypeResolution = null)
     {
         var cls = FindClassWithMethod(className, methodName);
         if (cls is null)
@@ -360,7 +367,10 @@ public class TypeChecker
         var method = cls.Methods[methodName];
         CheckMethodArguments(method, args, pos);
 
-        return method.ReturnType == "SELF_TYPE" ? className : method.ReturnType;
+        // When resolving SELF_TYPE, use selfTypeResolution if provided (for static dispatch),
+        // otherwise fall back to className (for regular dispatch)
+        var typeForSelfType = selfTypeResolution ?? className;
+        return method.ReturnType == "SELF_TYPE" ? typeForSelfType : method.ReturnType;
     }
 
     /// <summary>
@@ -487,7 +497,8 @@ public class TypeChecker
 
     /// <summary>
     /// Retrieves the type of a given variable within the context of the current class and local scope.
-    /// Reports an error if the variable is undefined or inaccessible in the given location.
+    /// In Cool, if an identifier is not found as a variable, it may be a zero-argument method call.
+    /// Reports an error if the variable is undefined and no method with that name exists.
     /// </summary>
     private string GetVariableType(string name, SourcePosition location)
     {
@@ -500,6 +511,16 @@ public class TypeChecker
             if (cls.Attributes.TryGetValue(name, out var attr))
                 return attr.Type;
             cls = cls.ParentName is null ? null : _symbols.TryGetClass(cls.ParentName);
+        }
+
+        // In Cool, an identifier without parentheses may also be a zero-argument method call.
+        // This is syntactic sugar for self.methodName().
+        var clsWithMethod = FindClassWithMethod(_currentClass, name);
+        if (clsWithMethod != null)
+        {
+            var method = clsWithMethod.Methods[name];
+            // Zero-argument method call - return the method's return type
+            return method.ReturnType == "SELF_TYPE" ? _currentClass : method.ReturnType;
         }
 
         _diagnostics.ReportError(location, CoolErrorCodes.UndefinedVariable, $"Undefined variable '{name}'");
@@ -640,5 +661,9 @@ public class TypeChecker
             "Bool"   => "Bool",
             _        => "Object"
         };
+    }
+    private bool IsBuiltInClass(string? className)
+    {
+        return className is "Object" or "IO" or "Int" or "String" or "Bool";
     }
 }
