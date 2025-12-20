@@ -214,6 +214,8 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
         "IO"     => _runtime.Io,
         
         "Object" => _runtime.ObjectRoot,
+
+        "SELF_TYPE" => ObjectFactory.Create(_env.Self.Class, _runtime),
         
         _ => ObjectFactory.Create(RuntimeClassFactory.FromSymbol(_runtime.SymbolTable.GetClass(node.TypeName), _runtime), _runtime)
     };

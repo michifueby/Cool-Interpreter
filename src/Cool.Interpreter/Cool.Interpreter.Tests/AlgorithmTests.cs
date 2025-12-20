@@ -6,6 +6,8 @@
 // <summary>Algorithm/Full Execution Tests</summary>
 //-----------------------------------------------------------------------
 
+using System.IO;
+
 namespace Cool.Interpreter.Tests;
 
 using Cool.Interpreter.Lib.Core.Diagnostics;

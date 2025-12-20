@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
 using Cool.Interpreter.Lib.Language.Interpretation;
 using NUnit.Framework;
 

@@ -46,7 +46,7 @@ public class CoolUserObject : CoolObject
 
         foreach (var attr in @class.GetAllAttributesInOrder())
         {
-            var def = attr.Initializer is null ? DefaultValue(attr.TypeName) : CoolVoid.Value; 
+            var def = DefaultValue(attr.TypeName);
             _attributes[attr.Name] = def;
         }
 
