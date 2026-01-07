@@ -9,10 +9,10 @@
 namespace Cool.Interpreter.Lib.Language.Classes;
 
 using System.Collections.Immutable;
-using Cool.Interpreter.Lib.Core.Syntax.Ast;
-using Cool.Interpreter.Lib.Core.Syntax;
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Expressions;
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
+using Core.Syntax.Ast;
+using Core.Syntax;
+using Core.Syntax.Ast.Expressions;
+using Core.Syntax.Ast.Features;
 
 /// <summary>
 /// Provides a collection of predefined classes in the Cool programming language.

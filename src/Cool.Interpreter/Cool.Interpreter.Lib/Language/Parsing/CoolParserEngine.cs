@@ -13,9 +13,9 @@ using System.Runtime.ExceptionServices;
 namespace Cool.Interpreter.Lib.Language.Parsing;
 
 using Antlr4.Runtime;
-using Cool.Interpreter.Lib.Core.Syntax.Ast;
-using Cool.Interpreter.Lib.Core.Diagnostics;
-using Cool.Interpreter.Lib.Core.Syntax;
+using Core.Syntax.Ast;
+using Core.Diagnostics;
+using Core.Syntax;
 
 /// <summary>
 /// Orchestrates the ANTLR-generated lexer and parser to produce a clean AST.
@@ -27,7 +27,7 @@ public class CoolParserEngine
     /// Parses the provided source code and generates a syntax tree along with diagnostics.
     /// </summary>
     /// <param name="sourceCode">The source code to parse. Must not be null.</param>
-    /// <param name="sourceName">The name of the source, used for diagnostics. If not provided, defaults to "<unknown>".</param>
+    /// <param name="sourceName">The name of the source, used for diagnostics. If not provided, defaults to "unknown".</param>
     /// <returns>A <see cref="ParseResult"/> containing the syntax tree and diagnostics.</returns>
     public ParseResult Parse(string sourceCode, string? sourceName = null)
     {
@@ -71,7 +71,7 @@ public class CoolParserEngine
 
             return new ParseResult(null, diagnostics.Diagnostics);
         }
-        catch (Exception ex) when (!(ex is ParseCanceledException))
+        catch (Exception ex) when (ex is not ParseCanceledException)
         {
             // Real crashes (should never happen)
             diagnostics.ReportInternal(
@@ -83,10 +83,10 @@ public class CoolParserEngine
         }
     }
 
-    private ParseResult RunParserWithIncreasedStack(CoolParser parser, string sourceName, DiagnosticBag diagnostics)
+    private static ParseResult RunParserWithIncreasedStack(CoolParser parser, string sourceName, DiagnosticBag diagnostics)
     {
         // 4MB stack size to handle deep recursion
-        const int StackSize = 4 * 1024 * 1024;
+        const int stackSize = 4 * 1024 * 1024;
         
         ParseResult? result = null;
         Exception? caughtException = null;
@@ -104,7 +104,7 @@ public class CoolParserEngine
             {
                 caughtException = ex;
             }
-        }, StackSize);
+        }, stackSize);
 
         thread.Start();
         thread.Join();

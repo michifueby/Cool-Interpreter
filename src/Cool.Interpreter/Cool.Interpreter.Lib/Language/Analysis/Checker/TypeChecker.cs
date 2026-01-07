@@ -9,13 +9,13 @@
 namespace Cool.Interpreter.Lib.Language.Analysis.Checker;
 
 using System.Collections.Immutable;
-using Cool.Interpreter.Lib.Core.Diagnostics;
-using Cool.Interpreter.Lib.Core.Syntax;
-using Cool.Interpreter.Lib.Core.Syntax.Ast;
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Expressions;
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
-using Cool.Interpreter.Lib.Core.Syntax.Operators;
-using Cool.Interpreter.Lib.Language.Symbols;
+using Core.Diagnostics;
+using Core.Syntax;
+using Core.Syntax.Ast;
+using Core.Syntax.Ast.Expressions;
+using Core.Syntax.Ast.Features;
+using Core.Syntax.Operators;
+using Symbols;
 
 /// <summary>
 /// Provides the functionality for semantic type checking in the Cool programming language.
@@ -113,10 +113,12 @@ public class TypeChecker
         {
             switch (feature)
             {
-                case AttributeNode attr: CheckAttribute(attr); 
+                case AttributeNode attr: 
+                    CheckAttribute(attr); 
                     break;
                 
-                case MethodNode method: CheckMethod(method); 
+                case MethodNode method: 
+                    CheckMethod(method); 
                     break;
             }
         }
@@ -189,7 +191,7 @@ public class TypeChecker
                 else
                 {
                      // Check parameter types match
-                     for (int i = 0; i < method.Formals.Count; i++)
+                     for (var i = 0; i < method.Formals.Count; i++)
                      {
                          if (method.Formals[i].TypeName != parentMethod.Formals[i].Type)
                          {
@@ -255,8 +257,12 @@ public class TypeChecker
     /// </summary>
     private void EnsureTypeExists(string typeName, SourcePosition location)
     {
-        if (typeName == "SELF_TYPE") return;
-        if (typeName == "prim_slot") return; // Internal type?
+        switch (typeName)
+        {
+            case "SELF_TYPE":  // Internal type?
+            case "prim_slot":
+                return;
+        }
 
         if (_symbols.TryGetClass(typeName) is null)
         {
@@ -342,18 +348,17 @@ public class TypeChecker
         }
 
         // Static dispatch: e@T.f(args)
-        string lookupType = node.StaticTypeName ?? dispatchType;
+        var lookupType = node.StaticTypeName ?? dispatchType;
 
         // Optional: check conformance for static dispatch
-        if (node.StaticTypeName != null)
+        if (node.StaticTypeName == null)
+            return GetMethodReturnType(lookupType, node.MethodName, node.Arguments, node.Location, dispatchType);
+        EnsureTypeExists(node.StaticTypeName, node.Location);
+        if (!IsTypeCompatible(dispatchType, node.StaticTypeName))
         {
-            EnsureTypeExists(node.StaticTypeName, node.Location);
-            if (!IsTypeCompatible(dispatchType, node.StaticTypeName))
-            {
-                _diagnostics.ReportError(node.Location, CoolErrorCodes.StaticDispatchTypeError,
-                    $"Receiver of type '{dispatchType}' does not conform to static type '{node.StaticTypeName}'");
-                // Recovery: still use the static type for lookup
-            }
+            _diagnostics.ReportError(node.Location, CoolErrorCodes.StaticDispatchTypeError,
+                $"Receiver of type '{dispatchType}' does not conform to static type '{node.StaticTypeName}'");
+            // Recovery: still use the static type for lookup
         }
 
         // Note: dispatchType is passed for SELF_TYPE resolution - even with static dispatch,
@@ -420,7 +425,7 @@ public class TypeChecker
              return; 
         }
 
-        for (int i = 0; i < args.Count; i++)
+        for (var i = 0; i < args.Count; i++)
         {
             var argType = GetExpressionType(args[i]);
             var paramType = method.Formals[i].Type;
@@ -481,7 +486,7 @@ public class TypeChecker
 
             BinaryOperator.Equal => "Bool", 
             
-            _ => this.ReportAndRecover(node.Location, CoolErrorCodes.InvalidBinaryOperation, $"Operator '{node.Operator}' not supported on types '{left}' and '{right}'")
+            _ => ReportAndRecover(node.Location, CoolErrorCodes.InvalidBinaryOperation, $"Operator '{node.Operator}' not supported on types '{left}' and '{right}'")
         };
     }
 
@@ -498,7 +503,7 @@ public class TypeChecker
             
             UnaryOperator.Not when type == "Bool" => "Bool",
             
-            _ => this.ReportAndRecover(node.Location, CoolErrorCodes.InvalidUnaryOperation, $"Operator '{node.Operator}' not supported on type '{type}'")
+            _ => ReportAndRecover(node.Location, CoolErrorCodes.InvalidUnaryOperation, $"Operator '{node.Operator}' not supported on type '{type}'")
         };
     }
 
@@ -583,15 +588,14 @@ public class TypeChecker
         {
             if (binding is null) continue;
             
-            string declaredType = binding.TypeName ?? "Object";
-            string initializationType;
+            var declaredType = binding.TypeName;  // ?? "Object";
 
             if (binding.Initializer is not null)
             {
                 // Verify initializer using CURRENT scope (includes previous let-bindings)
-                initializationType = GetExpressionType(binding.Initializer);
-                
-                if (binding.TypeName is not null && !IsTypeCompatible(initializationType, declaredType))
+                var initializationType = GetExpressionType(binding.Initializer);
+
+                if (!IsTypeCompatible(initializationType, declaredType))
                 {
                     _diagnostics.ReportError(binding.Location,
                         CoolErrorCodes.LetBindingTypeMismatch,
@@ -604,7 +608,7 @@ public class TypeChecker
         }
 
         // Type of let = type of body
-        string bodyType = GetExpressionType(node.Body);
+        var bodyType = GetExpressionType(node.Body);
 
         // Restore scope
         _localVariables = previousLocals;

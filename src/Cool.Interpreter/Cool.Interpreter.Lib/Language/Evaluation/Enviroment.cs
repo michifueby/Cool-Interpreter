@@ -9,9 +9,9 @@
 namespace Cool.Interpreter.Lib.Language.Evaluation;
 
 using System.Collections.Immutable;
-using Cool.Interpreter.Lib.Core.Exeptions;
-using Cool.Interpreter.Lib.Language.Classes;
-using Cool.Interpreter.Lib.Language.Classes.BuiltIn;
+using Core.Exceptions;
+using Classes;
+using Classes.BuiltIn;
 
 /// <summary>
 /// Immutable execution environment (frame) for Cool evaluation.

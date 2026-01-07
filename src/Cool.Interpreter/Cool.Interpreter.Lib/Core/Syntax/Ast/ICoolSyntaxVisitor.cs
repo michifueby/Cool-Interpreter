@@ -8,8 +8,8 @@
 
 namespace Cool.Interpreter.Lib.Core.Syntax.Ast;
 
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Expressions;
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
+using Expressions;
+using Features;
 
 /// <summary>
 /// Defines a visitor for traversing and processing nodes of the Cool Abstract Syntax Tree (AST).
@@ -17,7 +17,7 @@ using Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
 /// the AST node hierarchy without modifying the node classes themselves.
 /// </summary>
 /// <typeparam name="T">The type of value returned by the visitor after processing AST nodes.</typeparam>
-public interface ICoolSyntaxVisitor<T>
+public interface ICoolSyntaxVisitor<out T>
 {
     /// <summary>
     /// Visits a node in the abstract syntax tree and performs an operation depending on its type.

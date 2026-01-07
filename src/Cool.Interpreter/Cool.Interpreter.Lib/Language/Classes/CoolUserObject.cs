@@ -8,12 +8,11 @@
 
 namespace Cool.Interpreter.Lib.Language.Classes;
 
-using System.Collections.Immutable;
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Expressions;
-using Cool.Interpreter.Lib.Language.Extensions;
-using Cool.Interpreter.Lib.Core.Exeptions;
-using Cool.Interpreter.Lib.Language.Classes.BuiltIn;
-using Cool.Interpreter.Lib.Language.Evaluation;
+using Core.Syntax.Ast.Expressions;
+using Extensions;
+using Core.Exceptions;
+using BuiltIn;
+using Evaluation;
 
 /// <summary>
 /// Represents an immutable user-defined object in the Cool runtime environment.
@@ -81,11 +80,9 @@ public class CoolUserObject : CoolObject
 
         foreach (var attr in Class.GetAllAttributesInOrder())
         {
-            if (attr.Initializer is ExpressionNode init)
-            {
-                var value = init.Accept(new CoolEvaluator(env, tempEnv));
-                _attributes[attr.Name] = value;
-            }
+            if (attr.Initializer is not { } init) continue;
+            var value = init.Accept(new CoolEvaluator(env, tempEnv));
+            _attributes[attr.Name] = value;
         }
     }
 

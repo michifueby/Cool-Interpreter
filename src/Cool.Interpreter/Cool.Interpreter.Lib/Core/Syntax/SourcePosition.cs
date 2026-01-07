@@ -18,17 +18,17 @@ public class SourcePosition : IEquatable<SourcePosition>, IComparable<SourcePosi
     /// Gets the path or name of the source file (e.g., "examples/Hello.cool", "REPL", "&lt;stdin&gt;").
     /// May be null for synthetic or in-memory sources.
     /// </summary>
-    public string? FilePath { get; }
+    private string? FilePath { get; }
 
     /// <summary>
     /// Gets the line number (1-based). The first line in a file is line 1.
     /// </summary>
-    public int Line { get; }
+    private int Line { get; }
 
     /// <summary>
     /// Gets the column number (1-based). The first character on a line is column 1.
     /// </summary>
-    public int Column { get; }
+    private int Column { get; }
 
     /// <summary>
     /// Gets the zero-based line index (used internally for text processing).

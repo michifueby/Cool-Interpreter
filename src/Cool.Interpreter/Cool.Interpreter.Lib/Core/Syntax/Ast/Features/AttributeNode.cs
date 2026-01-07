@@ -8,7 +8,7 @@
 
 namespace Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
 
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Expressions;
+using Expressions;
 
 /// <summary>
 /// Represents an attribute node within the abstract syntax tree (AST) of the Cool language.

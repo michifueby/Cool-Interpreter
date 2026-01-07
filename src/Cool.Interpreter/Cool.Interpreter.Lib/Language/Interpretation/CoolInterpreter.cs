@@ -9,14 +9,14 @@
 namespace Cool.Interpreter.Lib.Language.Interpretation;
 
 using System.Collections.Immutable;
-using Cool.Interpreter.Lib.Core.Exeptions;
-using Cool.Interpreter.Lib.Core.Syntax;
-using Cool.Interpreter.Lib.Language.Classes;
-using Cool.Interpreter.Lib.Language.Classes.BuiltIn;
-using Cool.Interpreter.Lib.Language.Evaluation;
-using Cool.Interpreter.Lib.Core.Diagnostics;
-using Cool.Interpreter.Lib.Language.Analysis;
-using Cool.Interpreter.Lib.Language.Parsing;
+using Core.Exceptions;
+using Core.Syntax;
+using Classes;
+using Classes.BuiltIn;
+using Evaluation;
+using Core.Diagnostics;
+using Analysis;
+using Parsing;
 
 /// <summary>
 /// Executes Cool programs by directly interpreting the Cool program.
@@ -67,14 +67,7 @@ public class CoolInterpreter : IInterpreter
 
         // Phase 1: Parse
         var parseResult = _parser.Parse(sourceCode, sourceName);
-        if (parseResult.SyntaxTree is null)
-        {
-            return InterpretationResult.Failure(
-                output: string.Empty,
-                diagnostics: [..parseResult.Diagnostics],
-                returnedValue: null);
-        }
-        else if (parseResult.HasErrors)
+        if (parseResult.SyntaxTree is null || parseResult.HasErrors)
         {
             return InterpretationResult.Failure(
                 output: string.Empty,
@@ -138,7 +131,7 @@ public class CoolInterpreter : IInterpreter
             executionDiagnostics.ReportError(
                 SourcePosition.None,
                 CoolErrorCodes.InternalInterpreterError,
-                $"Internal interpreter error: {ex.ToString()}");
+                $"Internal interpreter error: {ex}");
         }
         
         // Phase 3: Return result
@@ -155,8 +148,8 @@ public class CoolInterpreter : IInterpreter
                 returnedValue: null);
         }
 
-        string finalOutput = outputBuffer.ToString();
-        string resultString = returnedValue switch
+        var finalOutput = outputBuffer.ToString();
+        var resultString = returnedValue switch
         {
             CoolVoid => string.Empty,
             null     => "null",
@@ -175,7 +168,7 @@ public class CoolInterpreter : IInterpreter
     /// The source code of the Cool program to be parsed. Cannot be null.
     /// </param>
     /// <param name="sourceName">
-    /// An optional identifier for the source of the code, such as a file name. Defaults to "<string>" if not specified.
+    /// An optional identifier for the source of the code, such as a file name. Defaults to "string" if not specified.
     /// </param>
     /// <returns>
     /// A <see cref="ParseResult"/> object containing the syntax tree and diagnostics generated during parsing.

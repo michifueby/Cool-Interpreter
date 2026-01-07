@@ -8,7 +8,7 @@
 
 namespace Cool.Interpreter.Lib.Language.Classes.BuiltIn;
 
-using Cool.Interpreter.Lib.Core.Exeptions;
+using Core.Exceptions;
 
 /// <summary>
 /// Represents a string object in the Cool programming language.

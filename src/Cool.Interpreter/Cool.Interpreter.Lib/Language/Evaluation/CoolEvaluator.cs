@@ -10,15 +10,15 @@ namespace Cool.Interpreter.Lib.Language.Evaluation;
 
 using System;
 using System.Linq;
-using Cool.Interpreter.Lib.Core.Exeptions;
-using Cool.Interpreter.Lib.Core.Syntax.Ast;
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Expressions;
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
-using Cool.Interpreter.Lib.Core.Syntax.Operators;
-using Cool.Interpreter.Lib.Core.Diagnostics;
-using Cool.Interpreter.Lib.Language.Classes;
-using Cool.Interpreter.Lib.Language.Classes.BuiltIn;
-using Cool.Interpreter.Lib.Language.Symbols;
+using Core.Exceptions;
+using Core.Syntax.Ast;
+using Core.Syntax.Ast.Expressions;
+using Core.Syntax.Ast.Features;
+using Core.Syntax.Operators;
+using Core.Diagnostics;
+using Classes;
+using Classes.BuiltIn;
+using Symbols;
 
 /// <summary>
 /// Represents an evaluator for executing Cool language programs.
@@ -29,7 +29,7 @@ using Cool.Interpreter.Lib.Language.Symbols;
 /// This class works within the context of the Cool runtime environment and supports the evaluation
 /// of various Cool language constructs, such as literals, expressions, and program structures.
 /// </remarks>
-public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
+public class CoolEvaluator(CoolRuntimeEnvironment runtime, Environment? env = null) : ICoolSyntaxVisitor<CoolObject>
 {
     /// <summary>
     /// Represents the runtime environment used by the evaluator to store global state,
@@ -37,7 +37,7 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     /// This variable is used internally by the CoolEvaluator to facilitate the evaluation
     /// of Cool programs, including object creation and method dispatch.
     /// </summary>
-    private readonly CoolRuntimeEnvironment _runtime;
+    private readonly CoolRuntimeEnvironment _runtime = runtime;
 
     /// <summary>
     /// Represents the current evaluation environment in which variables, bindings, and
@@ -45,24 +45,7 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     /// This variable is used to manage scope and ensure proper context for evaluating
     /// expressions, resolving identifiers, and handling assignments.
     /// </summary>
-    private Environment _env;
-
-    /// <summary>
-    /// Defines methods to evaluate and interpret a Cool language syntax tree, producing corresponding <see cref="CoolObject"/> instances.
-    /// Implements the <see cref="ICoolSyntaxVisitor{CoolObject}"/> interface to visit various syntax nodes and execute their logic.
-    /// </summary>
-    /// <remarks>
-    /// This class operates as the core evaluator in the Cool language interpreter, handling runtime environments
-    /// and dispatch mechanisms for evaluating programs and expressions.
-    /// </remarks>
-    public CoolEvaluator(CoolRuntimeEnvironment runtime) 
-        => _runtime = runtime;
-
-    public CoolEvaluator(CoolRuntimeEnvironment runtime, Environment env)
-    {
-        _runtime = runtime;
-        _env = env;
-    }
+    private Environment _env = env ?? Environment.Empty;
 
     public CoolObject Evaluate(ProgramNode program)
     {
@@ -180,14 +163,11 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
         // In Cool, an identifier without parentheses may also be a zero-argument method call on self.
         // This is syntactic sugar for self.methodName().
         var method = FindMethodInHierarchy(_env.Self.Class, node.Identifier, 0);
-        if (method != null)
-        {
-            // Call the method with no arguments on self
-            Environment activationFrame = Environment.Empty.WithSelf(_env.Self);
-            return StartEvaluation(method.Body, activationFrame);
-        }
-        
-        throw new CoolRuntimeException($"Undefined identifier: {node.Identifier}");
+        if (method == null) throw new CoolRuntimeException($"Undefined identifier: {node.Identifier}"); // error: not found
+        // Call the method with no arguments on self
+        var activationFrame = Environment.Empty.WithSelf(_env.Self);
+        return StartEvaluation(method.Body, activationFrame);
+
     }
 
     /// <summary>
@@ -208,14 +188,12 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
         }
 
         // 2. Update attribute of 'self'
-        if (_env.Self is CoolUserObject selfObj)
-        {
-            selfObj.SetAttribute(node.Identifier, value);
-            return value;
-        }
+        if (_env.Self is not CoolUserObject selfObj) // assignment outside object context: runtime error
+            throw new CoolRuntimeException($"Assignment to undefined variable {node.Identifier}",
+                CoolErrorCodes.AssignToUndefinedAttribute);
         
-        // 3. Error
-        throw new CoolRuntimeException($"Assignment to undefined variable {node.Identifier}", CoolErrorCodes.AssignToUndefinedAttribute);
+        selfObj.SetAttribute(node.Identifier, value);
+        return value;
     }
 
     /// <summary>
@@ -230,22 +208,17 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     public CoolObject Visit(NewNode node)
     {
         // Resolve the actual type name (handle SELF_TYPE)
-        string actualTypeName = node.TypeName == "SELF_TYPE" 
+        var actualTypeName = node.TypeName == "SELF_TYPE" 
             ? _env.Self.Class.Name 
             : node.TypeName;
 
         return actualTypeName switch
         {
             "Int" => CoolInt.Zero,
-            
             "String" => CoolString.Empty,
-            
             "Bool" => CoolBool.False,
-            
             "IO" => _runtime.Io,
-            
             "Object" => _runtime.ObjectRoot,
-            
             _ => ObjectFactory.Create(
                 RuntimeClassFactory.FromSymbol(_runtime.SymbolTable.GetClass(actualTypeName), _runtime), 
                 _runtime)
@@ -264,37 +237,37 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     public CoolObject Visit(DispatchNode node)
     {
         // 1. Evaluate the receiver (the object on which the method is called)
-        CoolObject receiver = node.Caller.Accept(this);
+        var receiver = node.Caller.Accept(this);
         
         // Check for dispatch on void (runtime error in Cool)
-        if (receiver is null || receiver is CoolVoid)
+        if (receiver is null or CoolVoid)
             throw new CoolRuntimeException("Dispatch on void");
 
         // 2. Evaluate all actual arguments
-        CoolObject[] actualArgs = node.Arguments
+        var actualArgs = node.Arguments
             .Select(arg => arg.Accept(this)
                            ?? throw new CoolRuntimeException("Argument evaluated to void"))
             .ToArray();
 
         // 3. Determine the starting class for method lookup
-        CoolClass lookupStartClass = node.StaticTypeName is null
+        var lookupStartClass = node.StaticTypeName is null
             ? receiver.Class                                                  // Dynamic dispatch: start from runtime class
             : ResolveStaticDispatchClass(node.StaticTypeName);                 // Static dispatch: use explicit type
 
         // 4. Find the method in the inheritance chain
-        MethodNode? method = FindMethodInHierarchy(lookupStartClass, node.MethodName, actualArgs.Length)
+        var method = FindMethodInHierarchy(lookupStartClass, node.MethodName, actualArgs.Length)
                              ?? throw new CoolRuntimeException(
                                  $"Method '{node.MethodName}' with {actualArgs.Length} argument(s) not found in class '{lookupStartClass.Name}' or its ancestors");
 
         // 5. Build the activation frame:
         //    - self = receiver
         //    - bind formals to actual arguments
-        Environment activationFrame = Environment.Empty.WithSelf(receiver);
+        var activationFrame = Environment.Empty.WithSelf(receiver);
 
-        for (int i = 0; i < method.Formals.Count; i++)
+        for (var i = 0; i < method.Formals.Count; i++)
         {
-            string formalName = method.Formals[i].Name;
-            CoolObject argValue = actualArgs[i];
+            var formalName = method.Formals[i].Name;
+            var argValue = actualArgs[i];
             activationFrame = activationFrame.WithLocal(formalName, argValue);
         }
 
@@ -394,22 +367,19 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
 
         // Find the most specific matching branch (smallest inheritance distance)
         CaseBranchNode? bestBranch = null;
-        int bestDistance = int.MaxValue;
+        var bestDistance = int.MaxValue;
 
         foreach (var branch in node.Branches)
         {
-            int distance = InheritanceDistance(value.Class.Name, branch.TypeName, _runtime.SymbolTable);
-            if (distance >= 0 && distance < bestDistance)
-            {
-                bestDistance = distance;
-                bestBranch = branch;
-            }
+            var distance = InheritanceDistance(value.Class.Name, branch.TypeName, _runtime.SymbolTable);
+            if (distance < 0 || distance >= bestDistance) continue;
+            bestDistance = distance;
+            bestBranch = branch;
         }
 
-        if (bestBranch is null)
-            throw new CoolRuntimeException("case: no matching branch");
-        
-        return StartEvaluation(bestBranch.Body, _env.WithLocal(bestBranch.Identifier, value));
+        return bestBranch is null 
+            ? throw new CoolRuntimeException("case: no matching branch") 
+            : StartEvaluation(bestBranch.Body, _env.WithLocal(bestBranch.Identifier, value));
     }
 
     /// <summary>
@@ -495,10 +465,10 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
             "type_name"  => new CoolString(self.Class.Name),
             "copy"       => self.Copy(),
 
-            "out_string" when InheritsFromIo(self) && args.Length == 1 && args[0] is CoolString s =>
+            "out_string" when InheritsFromIo(self) && args is [CoolString s] =>
                 _runtime.Io.OutString(s),
 
-            "out_int" when InheritsFromIo(self) && args.Length == 1 && args[0] is CoolInt i =>
+            "out_int" when InheritsFromIo(self) && args is [CoolInt i] =>
                 _runtime.Io.OutInt(i),
 
             "in_string" when InheritsFromIo(self) => _runtime.Io.InString(),
@@ -506,7 +476,7 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
 
             "length" when self is CoolString s => new CoolInt(s.Value.Length),
 
-            "concat" when self is CoolString s && args.Length == 1 && args[0] is CoolString o =>
+            "concat" when self is CoolString s && args is [CoolString o] =>
                 new CoolString(s.Value + o.Value),
 
             "substr" when self is CoolString s && args.Length == 2 =>
@@ -592,13 +562,13 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     /// and walking up the inheritance chain.
     /// </summary>
     /// <returns>The MethodNode if found; otherwise null.</returns>
-    private MethodNode? FindMethodInHierarchy(CoolClass startClass, string methodName, int arity)
+    private static MethodNode? FindMethodInHierarchy(CoolClass startClass, string methodName, int arity)
     {
-        CoolClass? current = startClass;
+        var current = startClass;
 
         while (current is not null)
         {
-            if (current.Methods.TryGetValue(methodName, out MethodNode? method) &&
+            if (current.Methods.TryGetValue(methodName, out var method) &&
                 method.Formals.Count == arity)
             {
                 return method;
@@ -616,10 +586,9 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     private CoolClass ResolveStaticDispatchClass(string typeName)
     {
         var classSymbol = _runtime.SymbolTable.TryGetClass(typeName);
-        if (classSymbol is null)
-            throw new CoolRuntimeException($"Static dispatch type '{typeName}' not found");
-
-        return RuntimeClassFactory.FromSymbol(classSymbol, _runtime);
+        return classSymbol is null 
+            ? throw new CoolRuntimeException($"Static dispatch type '{typeName}' not found") 
+            : RuntimeClassFactory.FromSymbol(classSymbol, _runtime);
     }
 
     /// <summary>
@@ -654,7 +623,7 @@ public class CoolEvaluator : ICoolSyntaxVisitor<CoolObject>
     {
         if (actual == expected) return 0;
         
-        int distance = 1;
+        var distance = 1;
         var cls = st.GetClass(actual);
         
         while (cls?.ParentName is not null)

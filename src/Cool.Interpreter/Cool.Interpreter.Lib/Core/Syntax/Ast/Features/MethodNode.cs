@@ -8,7 +8,7 @@
 
 namespace Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
 
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Expressions;
+using Expressions;
 
 /// <summary>
 /// Represents a method declaration within the program's syntax tree.

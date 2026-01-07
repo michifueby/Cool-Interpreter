@@ -8,8 +8,8 @@
 
 namespace Cool.Interpreter.Lib.Language.Classes.BuiltIn;
 
-using Cool.Interpreter.Lib.Core.Exeptions;
-using Cool.Interpreter.Lib.Language.Evaluation;
+using Core.Exceptions;
+using Evaluation;
 
 /// <summary>
 /// Represents the built-in CoolIO class, which provides input and output functionality

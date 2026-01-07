@@ -11,9 +11,9 @@ namespace Cool.Interpreter.Lib.Language.Evaluation;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Linq;
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
-using Cool.Interpreter.Lib.Language.Classes;
-using Cool.Interpreter.Lib.Language.Symbols;
+using Core.Syntax.Ast.Features;
+using Classes;
+using Symbols;
 
 /// <summary>
 /// Provides functionality to convert a <c>ClassSymbol</c> (semantic phase representation)
@@ -59,21 +59,27 @@ public static class RuntimeClassFactory
         // Otherwise, it's a user-defined class — build it from the symbol
 
         // Resolve parent recursively
-        CoolClass? parent = symbol.ParentName switch
+        var parent = symbol.ParentName switch
         {
             null or "Object" => PredefinedClasses.Object,  // Main inherits from Object implicitly
             var p => FromSymbol(env.SymbolTable.GetClass(p)!, env)
         };
 
         // Extract methods and attributes from the AST definition
-        var methods = symbol.Definition.Features
+        var methods = symbol.Definition?.Features
             .OfType<MethodNode>()
             .ToImmutableDictionary(m => m.Name, m => m);
 
-        var attributes = symbol.Definition.Features
+        var attributes = symbol.Definition?.Features
             .OfType<AttributeNode>()
             .ToImmutableDictionary(a => a.Name, a => a);
 
+        if (methods == null || attributes == null)
+        {
+            throw new Core.Exceptions.CoolRuntimeException(
+                $"Class '{symbol.Name}' is missing method or attribute definitions.",
+                Core.Syntax.SourcePosition.None);
+        }
         var newClass = new CoolClass(
             name: symbol.Name,
             parent: parent,

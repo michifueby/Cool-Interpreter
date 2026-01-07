@@ -11,9 +11,9 @@ namespace Cool.Interpreter.Lib.Language.Evaluation;
 using System;
 using System.Collections.Immutable;
 using System.IO;
-using Cool.Interpreter.Lib.Language.Classes;
-using Cool.Interpreter.Lib.Language.Classes.BuiltIn;
-using Cool.Interpreter.Lib.Language.Symbols;
+using Classes;
+using Classes.BuiltIn;
+using Symbols;
 
 /// <summary>
 /// Represents the runtime environment for the Cool programming language,
