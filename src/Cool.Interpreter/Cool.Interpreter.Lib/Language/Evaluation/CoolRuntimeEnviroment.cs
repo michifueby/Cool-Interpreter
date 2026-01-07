@@ -9,6 +9,7 @@
 namespace Cool.Interpreter.Lib.Language.Evaluation;
 
 using System;
+using System.Collections.Immutable;
 using System.IO;
 using Cool.Interpreter.Lib.Language.Classes;
 using Cool.Interpreter.Lib.Language.Classes.BuiltIn;
@@ -75,6 +76,8 @@ public class CoolRuntimeEnvironment
         Input       = input;
         ObjectRoot  = objectRoot;
         Io          = io;
+        StackDepth  = 0;
+        ClassesBeingInitialized = ImmutableHashSet<string>.Empty;
     }
 
     /// <summary>
@@ -99,6 +102,8 @@ public class CoolRuntimeEnvironment
 
         // IO is the only object that needs the environment reference
         Io = new CoolIo(this);
+        StackDepth = 0;
+        ClassesBeingInitialized = ImmutableHashSet<string>.Empty;
     }
 
     /// <summary>
@@ -106,7 +111,12 @@ public class CoolRuntimeEnvironment
     /// </summary>
     public int StackDepth { get; }
 
-    public const int MaxStackDepth = 1000;
+    /// <summary>
+    /// Classes currently being initialized to detect circular initialization dependencies.
+    /// </summary>
+    public ImmutableHashSet<string> ClassesBeingInitialized { get; }
+
+    public const int MaxStackDepth = 4;
 
     /// <summary>
     /// Private constructor used by WithOutput and WithInput to create a new environment
@@ -117,13 +127,15 @@ public class CoolRuntimeEnvironment
         TextWriter output,
         TextReader input,
         CoolObject objectRoot,
-        int stackDepth)
+        int stackDepth,
+        ImmutableHashSet<string> classesBeingInitialized)
     {
         SymbolTable = symbolTable;
         Output      = output;
         Input       = input;
         ObjectRoot  = objectRoot;
         StackDepth  = stackDepth;
+        ClassesBeingInitialized = classesBeingInitialized;
         // Re-create IO so it points to THIS new environment instance
         Io          = new CoolIo(this);
     }
@@ -134,7 +146,7 @@ public class CoolRuntimeEnvironment
     /// <param name="writer">The text writer to be used for output operations within the runtime environment.</param>
     /// <returns>A new instance of <c>CoolRuntimeEnvironment</c> configured with the specified output writer.</returns>
     public CoolRuntimeEnvironment WithOutput(TextWriter writer) =>
-        new(SymbolTable, writer, Input, ObjectRoot, StackDepth);
+        new(SymbolTable, writer, Input, ObjectRoot, StackDepth, ClassesBeingInitialized);
 
     /// <summary>
     /// Creates a new instance of the runtime environment with the specified input source.
@@ -142,8 +154,11 @@ public class CoolRuntimeEnvironment
     /// <param name="reader">A <see cref="TextReader"/> used to supply input to the runtime environment.</param>
     /// <returns>A new instance of <see cref="CoolRuntimeEnvironment"/> configured with the provided input source.</returns>
     public CoolRuntimeEnvironment WithInput(TextReader reader) =>
-        new(SymbolTable, Output, reader, ObjectRoot, StackDepth);
+        new(SymbolTable, Output, reader, ObjectRoot, StackDepth, ClassesBeingInitialized);
 
     public CoolRuntimeEnvironment WithStackDepth(int depth) =>
-        new(SymbolTable, Output, Input, ObjectRoot, depth);
+        new(SymbolTable, Output, Input, ObjectRoot, depth, ClassesBeingInitialized);
+
+    public CoolRuntimeEnvironment WithClassBeingInitialized(string className) =>
+        new(SymbolTable, Output, Input, ObjectRoot, StackDepth, ClassesBeingInitialized.Add(className));
 }

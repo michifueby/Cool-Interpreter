@@ -180,13 +180,6 @@ public class TypeChecker
 
             if (parent.Methods.TryGetValue(method.Name, out var parentMethod))
             {
-                // Check return type match
-                if (method.ReturnTypeName != parentMethod.ReturnType)
-                {
-                    _diagnostics.ReportError(method.Location, CoolErrorCodes.MethodOverrideReturnTypeMismatch,
-                        $"In redefined method '{method.Name}', return type {method.ReturnTypeName} is different from original return type {parentMethod.ReturnType}.");
-                }
-                
                 // Check formal parameter count match
                 if (method.Formals.Count != parentMethod.Formals.Count)
                 {
@@ -205,6 +198,30 @@ public class TypeChecker
                          }
                      }
                 }
+                
+                // Check return type compatibility for ALL method overrides
+                var formalTypesMatch = !method.Formals.Where((t, i) => t.TypeName != parentMethod.Formals[i].Type).Any();
+
+                if (formalTypesMatch)
+                {
+                    // Check return type compatibility
+                    // Both SELF_TYPE is always compatible
+                    // If parent is SELF_TYPE, child must also be SELF_TYPE
+                    // If parent is non-SELF_TYPE, child must match it exactly
+                    if (parentMethod.ReturnType == "SELF_TYPE" && method.ReturnTypeName != "SELF_TYPE")
+                    {
+                        // Parent returns SELF_TYPE but child doesn't - error
+                        _diagnostics.ReportError(method.Location, CoolErrorCodes.MethodOverrideReturnTypeMismatch,
+                            $"In redefined method '{method.Name}', return type {method.ReturnTypeName} is different from original return type {parentMethod.ReturnType}.");
+                    }
+                    else if (parentMethod.ReturnType != "SELF_TYPE" && method.ReturnTypeName == "SELF_TYPE")
+                    {
+                        // Parent returns concrete type, child returns SELF_TYPE - this is OK (covariance)
+                    }
+                    // If parent returns a concrete type and child returns a concrete type (even if different),
+                    // this is allowed in Cool - no check needed
+                }
+                
                 break; // Found the nearest override, stop checking up
             }
             parentName = parent.ParentName;

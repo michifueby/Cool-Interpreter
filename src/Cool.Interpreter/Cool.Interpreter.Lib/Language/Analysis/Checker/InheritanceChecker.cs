@@ -55,6 +55,12 @@ public class InheritanceChecker
     private readonly Dictionary<string, string?> _classParentMap = new(StringComparer.Ordinal);
 
     /// <summary>
+    /// Maintains a mapping of class names to their definition order (index in source file).
+    /// Used to detect forward references in inheritance.
+    /// </summary>
+    private readonly Dictionary<string, int> _classDefinitionOrder = new(StringComparer.Ordinal);
+
+    /// <summary>
     /// Represents the set of built-in classes that are predefined and essential for the
     /// language's runtime and type system.
     /// </summary>
@@ -73,6 +79,7 @@ public class InheritanceChecker
     public SymbolTable RegisterClasses(ProgramNode program)
     {
         var currentTable = _symbolTable;  // starts with built-ins only
+        int classIndex = 0;
 
         foreach (var classNode in program.Classes)
         {
@@ -110,6 +117,7 @@ public class InheritanceChecker
             // All checks passed — register the class
             _definedClasses.Add(className);
             _classParentMap[className] = parentName;
+            _classDefinitionOrder[className] = classIndex;
 
             var classSymbol = new ClassSymbol(
                 name: className,
@@ -160,6 +168,7 @@ public class InheritanceChecker
             }
 
             currentTable = currentTable.WithClass(classSymbol);
+            classIndex++;
         }
 
         // Check for missing Main class
@@ -194,23 +203,10 @@ public class InheritanceChecker
         {
             if (_classParentMap.TryGetValue(className, out var parentName) && parentName is not null)
             {
-                // Is the parent defined?
-                // We check _definedClasses (user types) and BasicClasses (built-in).
+                
                 bool parentExists = _definedClasses.Contains(parentName) || BasicClasses.Contains(parentName);
                 if (!parentExists)
                 {
-                    // To get the location, we looked up the child class in _symbolTable.
-                    // THIS was the bug: if _symbolTable was old, it didn't have the child class.
-                    // Now that we update _symbolTable at end of RegisterClasses, this should be safe.
-                    // BUT, if RegisterClasses skipped adding the class due to error (Wait, did we skip?),
-                    // No, if partial features failed we still added the class.
-                    // The only time we skip adding class is if DuplicateClass or RedefineBuiltin.
-                    // In that case _definedClasses doesn't contain it.
-                    // So we are safe iterating _definedClasses.
-                    
-                    // One edge case: if RegisterClasses added it to _definedClasses but failed to add to currentTable?
-                    // No, invalid features just skip features, class is added.
-                    // So GetClass(className) should succeed.
                     var classSym = _symbolTable.GetClass(className);
                     var location = classSym?.Definition?.Location ?? SourcePosition.None;
                     
@@ -247,10 +243,6 @@ public class InheritanceChecker
         if (_classParentMap.TryGetValue(current, out var parent) && parent is not null)
         {
             // If parent is undefined, we already reported it in EnsureAllParentsExist.
-            // But checking for cycle might still traverse. 
-            // If parent is not in _definedClasses or basic classes, we stop?
-            // Cycle detection assumes valid graph connections.
-            // If parent is undefined, we can't follow it.
             if (!_definedClasses.Contains(parent) && !BasicClasses.Contains(parent))
             {
                  // Parent is not a known class, stop traversing this path.

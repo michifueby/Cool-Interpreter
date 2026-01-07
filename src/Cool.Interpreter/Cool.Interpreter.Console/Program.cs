@@ -9,9 +9,9 @@
 namespace Cool.Interpreter.Console;
 
 using System;
-using Cool.Interpreter.Lib.Core.Diagnostics;
-using Cool.Interpreter.Lib.Core.Syntax;
-using Cool.Interpreter.Lib.Language.Interpretation;
+using Lib.Core.Diagnostics;
+using Lib.Core.Syntax;
+using Lib.Language.Interpretation;
 
 /// <summary>
 /// Represents the entry point of the application, providing functionality to execute Cool programs
@@ -40,49 +40,49 @@ public static class Program
 
         InterpretationResult result;
 
-        if (args.Length == 0)
+        switch (args.Length)
         {
-            // No arguments: run a simple built-in test program
-            Console.WriteLine("No file provided. Running built-in test program...\n");
-            result = interpreter.Run(@"
-class Main {
-    main(): Int {
-        1 + 2 * 3
-    };
-};
-");
-            PrintResult(result);
-            return !result.HasErrors ? 0 : 1;
-        }
+            case 0:
+                // No arguments: run a simple built-in test program
+                Console.WriteLine("No file provided. Running built-in test program...\n");
+                result = interpreter.Run("""
 
-        if (args.Length == 1)
-        {
-            string arg = args[0].Trim();
-
-            if (arg == "--help" || arg == "-h")
-            {
-                PrintHelp();
-                return 0;
-            }
-
-            // Assume it's a file path
-            string filePath = arg;
-
-            try
-            {
-                result = interpreter.RunFile(filePath);
+                                                             class Main {
+                                                                 main(): Int {
+                                                                     1 + 2 * 3
+                                                                 };
+                                                             };
+                                                             
+                                         """);
                 PrintResult(result);
                 return !result.HasErrors ? 0 : 1;
-            }
-            catch (FileNotFoundException ex)
+            case 1:
             {
-                Console.Error.WriteLine($"Error: {ex.Message}");
-                return 1;
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error reading file: {ex.Message}");
-                return 1;
+                var arg = args[0].Trim();
+
+                if (arg == "--help" || arg == "-h")
+                {
+                    PrintHelp();
+                    return 0;
+                }
+
+                // Assume it's a file path
+                try
+                {
+                    result = interpreter.RunFile(arg);
+                    PrintResult(result);
+                    return !result.HasErrors ? 0 : 1;
+                }
+                catch (FileNotFoundException ex)
+                {
+                    Console.Error.WriteLine($"Error: {ex.Message}");
+                    return 1;
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Error reading file: {ex.Message}");
+                    return 1;
+                }
             }
         }
 
@@ -134,16 +134,18 @@ class Main {
     /// </summary>
     private static void PrintHelp()
     {
-        Console.WriteLine(@"Cool Interpreter
+        Console.WriteLine("""
+                          Cool Interpreter
 
-Usage:
-  cool.exe                     - Run built-in test program
-  cool.exe <file.cool>         - Run Cool program from file
-  cool.exe --help | -h         - Show this help
+                          Usage:
+                            cool.exe                     - Run built-in test program
+                            cool.exe <file.cool>         - Run Cool program from file
+                            cool.exe --help | -h         - Show this help
 
-Examples:
-  cool.exe hello.cool
-  cool.exe -h
-");
+                          Examples:
+                            cool.exe hello.cool
+                            cool.exe -h
+
+                          """);
     }
 }
