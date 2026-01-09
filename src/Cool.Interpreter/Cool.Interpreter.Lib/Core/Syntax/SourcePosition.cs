@@ -74,16 +74,44 @@ public class SourcePosition : IEquatable<SourcePosition>, IComparable<SourcePosi
         return $"{path}({Line},{Column})";
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns></returns>
     public bool Equals(SourcePosition? other)
         => other is not null &&
            FilePath == other.FilePath &&
            Line == other.Line &&
            Column == other.Column;
 
+    /// <summary>
+    /// Determines whether the specified object is equal to the current <see cref="SourcePosition"/> instance.
+    /// </summary>
+    /// <param name="obj">The object to compare with the current instance.</param>
+    /// <returns>
+    /// <c>true</c> if the specified object is a <see cref="SourcePosition"/> and has the same file path, line, and column values; otherwise, <c>false</c>.
+    /// </returns>
     public override bool Equals(object? obj) => Equals(obj as SourcePosition);
 
+    /// <summary>
+    /// Generates a hash code for the current instance of the <see cref="SourcePosition"/> class.
+    /// </summary>
+    /// <returns>
+    /// A 32-bit signed integer hash code that is based on the values of the <see cref="FilePath"/>,
+    /// <see cref="Line"/>, and <see cref="Column"/> properties.
+    /// </returns>
     public override int GetHashCode() => HashCode.Combine(FilePath, Line, Column);
 
+    /// <summary>
+    /// Compares the current instance with another <see cref="SourcePosition"/> object
+    /// and returns an integer that indicates the relative position in the source file.
+    /// </summary>
+    /// <param name="other">The <see cref="SourcePosition"/> to compare to the current instance. Can be null.</param>
+    /// <returns>An integer that indicates the relative order of the objects being compared.
+    /// A value less than zero means this instance precedes <paramref name="other"/>;
+    /// zero means both instances are equal;
+    /// a value greater than zero means this instance follows <paramref name="other"/>.</returns>
     public int CompareTo(SourcePosition? other)
     {
         if (other is null) return 1;
@@ -95,8 +123,23 @@ public class SourcePosition : IEquatable<SourcePosition>, IComparable<SourcePosi
         return lineComp != 0 ? lineComp : Column.CompareTo(other.Column);
     }
 
+    /// <summary>
+    /// Determines whether two <see cref="SourcePosition"/> objects are equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="SourcePosition"/> instance to compare.</param>
+    /// <param name="right">The second <see cref="SourcePosition"/> instance to compare.</param>
+    /// <returns><c>true</c> if the two <see cref="SourcePosition"/> instances are equal; otherwise, <c>false</c>.</returns>
     public static bool operator ==(SourcePosition? left, SourcePosition? right)
         => Equals(left, right);
+
+    /// <summary>
+    /// Determines whether two <see cref="SourcePosition"/> instances are not equal.
+    /// </summary>
+    /// <param name="left">The first <see cref="SourcePosition"/> to compare.</param>
+    /// <param name="right">The second <see cref="SourcePosition"/> to compare.</param>
+    /// <returns>
+    /// <c>true</c> if the two <see cref="SourcePosition"/> instances are not equal; otherwise, <c>false</c>.
+    /// </returns>
     public static bool operator !=(SourcePosition? left, SourcePosition? right)
         => !Equals(left, right);
 }
