@@ -8,8 +8,6 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from /Users/ibrahim/Studium/FHWN/3.Semster/CompilerBau/Cool-Interpreter/src/Cool.Interpreter/Cool.Interpreter.Lib/Antlr4/Grammars/Cool.g4 by ANTLR 4.13.1
-
 // Unreachable code detected
 #pragma warning disable 0162
 // The variable '...' is assigned but its value is never used
@@ -18,7 +16,6 @@
 #pragma warning disable 1591
 // Ambiguous reference in cref attribute
 #pragma warning disable 419
-
 
 using Antlr4.Runtime.Misc;
 using IErrorNode = Antlr4.Runtime.Tree.IErrorNode;
