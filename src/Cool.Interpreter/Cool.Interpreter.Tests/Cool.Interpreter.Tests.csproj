@@ -1150,9 +1150,6 @@
       <Content Include="TestCases\Semantics\success\example_coolmanual_pag5.cl">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
-      <Content Include="TestCases\Semantics\fail\example_coolmanual_pag9.cl">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
       <Content Include="TestCases\Semantics\success\exp.cl">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
@@ -1261,7 +1258,7 @@
       <Content Include="TestCases\Semantics\success\object-returned.cl">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
-      <Content Include="TestCases\Semantics\fail\override-basic.cl">
+      <Content Include="TestCases\Semantics\success\override-basic.cl">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
       <Content Include="TestCases\Semantics\success\override.cl">
@@ -1352,6 +1349,10 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
       <Content Include="TestCases\Semantics\success\whileoneexpression.cl">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <None Remove="TestCases\Semantics\success\example_coolmanual_pag9.cl" />
+      <Content Include="TestCases\Semantics\success\example_coolmanual_pag9.cl">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
