@@ -220,8 +220,12 @@ public class TypeChecker
                     {
                         // Parent returns concrete type, child returns SELF_TYPE - this is OK (covariance)
                     }
-                    // If parent returns a concrete type and child returns a concrete type (even if different),
-                    // this is allowed in Cool - no check needed
+                    else if (parentMethod.ReturnType != "SELF_TYPE" && method.ReturnTypeName != "SELF_TYPE" && parentMethod.ReturnType != method.ReturnTypeName)
+                    {
+                        // Both are concrete types but they don't match - error
+                        _diagnostics.ReportError(method.Location, CoolErrorCodes.MethodOverrideReturnTypeMismatch,
+                            $"In redefined method '{method.Name}', return type {method.ReturnTypeName} is different from original return type {parentMethod.ReturnType}.");
+                    }
                 }
                 
                 break; // Found the nearest override, stop checking up
