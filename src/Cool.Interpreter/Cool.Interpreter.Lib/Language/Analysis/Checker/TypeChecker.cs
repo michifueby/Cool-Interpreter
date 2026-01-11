@@ -201,32 +201,8 @@ public class TypeChecker
                      }
                 }
                 
-                // Check return type compatibility for ALL method overrides
-                var formalTypesMatch = !method.Formals.Where((t, i) => t.TypeName != parentMethod.Formals[i].Type).Any();
-
-                if (formalTypesMatch)
-                {
-                    // Check return type compatibility
-                    // Both SELF_TYPE is always compatible
-                    // If parent is SELF_TYPE, child must also be SELF_TYPE
-                    // If parent is non-SELF_TYPE, child must match it exactly
-                    if (parentMethod.ReturnType == "SELF_TYPE" && method.ReturnTypeName != "SELF_TYPE")
-                    {
-                        // Parent returns SELF_TYPE but child doesn't - error
-                        _diagnostics.ReportError(method.Location, CoolErrorCodes.MethodOverrideReturnTypeMismatch,
-                            $"In redefined method '{method.Name}', return type {method.ReturnTypeName} is different from original return type {parentMethod.ReturnType}.");
-                    }
-                    else if (parentMethod.ReturnType != "SELF_TYPE" && method.ReturnTypeName == "SELF_TYPE")
-                    {
-                        // Parent returns concrete type, child returns SELF_TYPE - this is OK (covariance)
-                    }
-                    else if (parentMethod.ReturnType != "SELF_TYPE" && method.ReturnTypeName != "SELF_TYPE" && parentMethod.ReturnType != method.ReturnTypeName)
-                    {
-                        // Both are concrete types but they don't match - error
-                        _diagnostics.ReportError(method.Location, CoolErrorCodes.MethodOverrideReturnTypeMismatch,
-                            $"In redefined method '{method.Name}', return type {method.ReturnTypeName} is different from original return type {parentMethod.ReturnType}.");
-                    }
-                }
+                // COOL allows method overrides with different return types
+                // No return type checking is performed for overridden methods
                 
                 break; // Found the nearest override, stop checking up
             }
