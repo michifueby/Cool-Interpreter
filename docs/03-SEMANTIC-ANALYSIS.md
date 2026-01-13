@@ -266,6 +266,8 @@ public class InheritanceChecker
 ### Phase 2: Inheritance Graph Validation
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff', 'lineColor': '#ffffff'}}}%%
+
 flowchart TB
     Start[Start] --> CheckParents[Check All Parent Classes Exist]
     CheckParents --> ValidParents{Valid?}
