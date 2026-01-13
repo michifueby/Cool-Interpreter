@@ -125,6 +125,8 @@ let, in, case, of, esac, new, isvoid, not
 ### Lexer Implementation
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff'}}}%%
+
 flowchart LR
     Source[Source Code] --> Lexer[ANTLR4 Lexer]
     Lexer --> Tokens[Token Stream]
@@ -155,6 +157,8 @@ flowchart LR
 ### Parser Architecture
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff'}}}%%
+
 flowchart TB
     TokenStream[Token Stream] --> Parser[ANTLR4 Parser]
     Parser --> ParseTree[Parse Tree<br/>ANTLR Context Objects]
