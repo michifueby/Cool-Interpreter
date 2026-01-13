@@ -27,6 +27,8 @@ The semantic analyzer produces a **SymbolTable** containing all class, method, a
 ## Semantic Analysis Architecture
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff', 'lineColor': '#ffffff'}}}%%
+
 flowchart TB
     AST[Abstract Syntax Tree] --> Analyzer[CoolSemanticAnalyzer]
     
