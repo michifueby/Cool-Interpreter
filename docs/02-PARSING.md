@@ -157,7 +157,7 @@ flowchart LR
 ### Parser Architecture
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff'}}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff', 'lineColor': '#ffffff'}}}%%
 
 flowchart TB
     TokenStream[Token Stream] --> Parser[ANTLR4 Parser]
@@ -446,6 +446,8 @@ private SourcePosition ToSourcePosition(IToken token)
 ### Parse Error Detection
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff', 'lineColor': '#ffffff'}}}%%
+
 flowchart TB
     Parser[Parser] --> Error{Syntax Error?}
     
