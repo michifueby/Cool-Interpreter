@@ -15,7 +15,7 @@ using Core.Diagnostics;
 /// Represents the complete result of executing a Cool program via <see cref="CoolInterpreter"/>.
 /// This is the one and only return type from the public facade.
 /// </summary>
-public sealed class InterpretationResult
+public class InterpretationResult
 {
     /// <summary>
     /// True if the program executed successfully (no errors).
@@ -41,22 +41,31 @@ public sealed class InterpretationResult
     /// </summary>
     public ImmutableArray<Diagnostic> Diagnostics { get; }
 
-    // Private constructor — forces use of factory methods
+    /// <summary>
+    /// Represents the result of interpreting a Cool program.
+    /// It encapsulates information about whether the interpretation succeeded,
+    /// the program's output, any returned value, and a set of diagnostics.
+    /// </summary>
     private InterpretationResult(
         bool isSuccess,
         string output,
         string returnedValue,
         ImmutableArray<Diagnostic> diagnostics)
     {
-        IsSuccess     = isSuccess;
+        IsSuccess = isSuccess;
         Output        = output        ?? string.Empty;
         ReturnedValue = returnedValue ?? string.Empty;
         Diagnostics   = diagnostics.IsDefault ? ImmutableArray<Diagnostic>.Empty : diagnostics;
     }
 
-    // --------------------------------------------------------------------
-    // Factory methods
-    // --------------------------------------------------------------------
+    /// <summary>
+    /// Creates a successful interpretation result indicating that the interpretation completed successfully.
+    /// It includes the output produced by the program, an optional returned value, and any diagnostics generated during execution.
+    /// </summary>
+    /// <param name="output">The output text produced by the interpretation process.</param>
+    /// <param name="returnedValue">The optional value returned by the program, if applicable.</param>
+    /// <param name="diagnostics">A collection of diagnostics generated during the interpretation process, if any.</param>
+    /// <returns>A new instance of <see cref="InterpretationResult"/> representing a successful interpretation.</returns>
     public static InterpretationResult Success(
         string output,
         string? returnedValue = null,
@@ -67,6 +76,14 @@ public sealed class InterpretationResult
             returnedValue: returnedValue ?? string.Empty,
             diagnostics: diagnostics ?? ImmutableArray<Diagnostic>.Empty);
 
+    /// <summary>
+    /// Creates a new instance of <see cref="InterpretationResult"/> representing a failure in interpreting a program.
+    /// It encapsulates diagnostic information and optional output and return value.
+    /// </summary>
+    /// <param name="output">The textual output generated up to the point of failure.</param>
+    /// <param name="diagnostics">A collection of diagnostic information detailing the issues encountered.</param>
+    /// <param name="returnedValue">An optional value returned by the program, which may be null in case of failure.</param>
+    /// <returns>An <see cref="InterpretationResult"/> instance representing the failure.</returns>
     public static InterpretationResult Failure(
         string output,
         ImmutableArray<Diagnostic> diagnostics,
@@ -77,22 +94,47 @@ public sealed class InterpretationResult
             returnedValue: returnedValue ?? string.Empty,
             diagnostics: diagnostics);
 
-    // Convenience overloads
+    /// <summary>
+    /// Creates a failure result of interpreting a Cool program, encapsulating the output
+    /// and a single diagnostic message indicating the reason for the failure.
+    /// </summary>
+    /// <param name="output">The program's output generated prior to the failure.</param>
+    /// <param name="diagnostic">The diagnostic conveying details of the failure.</param>
+    /// <returns>An instance of <see cref="InterpretationResult"/> representing the failure state.</returns>
     public static InterpretationResult Failure(string output, Diagnostic diagnostic) =>
         Failure(output, ImmutableArray.Create(diagnostic));
 
+    /// <summary>
+    /// Creates a failure result for the interpretation of a Cool program.
+    /// This method allows specifying multiple diagnostic messages that describe the reasons for failure.
+    /// </summary>
+    /// <param name="output">The output produced during the failed interpretation.</param>
+    /// <param name="diagnostics">An array of diagnostic messages providing details about the failure.</param>
+    /// <returns>An <see cref="InterpretationResult"/> indicating a failure.</returns>
     public static InterpretationResult Failure(string output, params Diagnostic[] diagnostics) =>
         Failure(output, diagnostics.ToImmutableArray());
 
-    // --------------------------------------------------------------------
-    // Helpful properties
-    // --------------------------------------------------------------------
-    public bool HasErrors   => Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error);
+    /// <summary>
+    /// True if there are any diagnostics with a severity level of Error.
+    /// Indicates the presence of errors during the interpretation process.
+    /// </summary>
+    public bool HasErrors => Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Error);
+
+    /// <summary>
+    /// True if there are diagnostics with a severity level of Warning.
+    /// </summary>
     public bool HasWarnings => Diagnostics.Any(d => d.Severity == DiagnosticSeverity.Warning);
 
-    // --------------------------------------------------------------------
-    // Beautiful ToString()
-    // --------------------------------------------------------------------
+    /// <summary>
+    /// Converts the result of program interpretation into a human-readable string representation.
+    /// The string provides detailed information about the execution outcome, including
+    /// success or failure status, the number of errors (if any), and any program output
+    /// or returned values.
+    /// </summary>
+    /// <returns>
+    /// A string describing the interpretation result, including execution status,
+    /// diagnostic information, output, and returned values.
+    /// </returns>
     public override string ToString()
     {
         if (!IsSuccess || HasErrors)
