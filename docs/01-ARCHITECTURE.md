@@ -28,6 +28,8 @@ The COOL Interpreter is built following a **multi-phase compiler architecture** 
 ## High-Level Architecture
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff'}}}%%
+
 flowchart TB
     subgraph "User Interface Layer"
         UI[CoolInterpreter<br/>Public Facade]
@@ -112,6 +114,8 @@ public class CoolInterpreter : IInterpreter
 ### 2. **Parsing Layer**
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff'}}}%%
+
 classDiagram
     class CoolParserEngine {
         +Parse(sourceCode, fileName) ParseResult
@@ -161,6 +165,8 @@ classDiagram
 ### 3. **Semantic Analysis Layer**
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff'}}}%%
+
 classDiagram
     class CoolSemanticAnalyzer {
         +Analyze(ProgramNode, DiagnosticBag) SemanticResult
@@ -230,6 +236,8 @@ classDiagram
 ### 4. **Runtime Execution Layer**
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff'}}}%%
+
 classDiagram
     class CoolEvaluator {
         -CoolRuntimeEnvironment _runtime
@@ -320,6 +328,8 @@ classDiagram
 ### 5. **Diagnostics System**
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff'}}}%%
+
 classDiagram
     class DiagnosticBag {
         -List~Diagnostic~ _diagnostics
@@ -457,6 +467,8 @@ var runtimeEnv = new CoolRuntimeEnvironment(symbolTable)
 ### Complete Interpretation Flow
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff'}}}%%
+
 sequenceDiagram
     participant User
     participant Interpreter as CoolInterpreter
