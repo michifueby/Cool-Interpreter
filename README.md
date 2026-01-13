@@ -3,7 +3,7 @@
 ## Project Report
 **Authors:** Michael Füby, Armin Zimmerling, Mahmoud Ibrahim  
 **Institution:** FH Wiener Neustadt  
-**Course:** Compiler Construction (M.INFO.B.24.WS25 COM 68598)  
+**Course:** Compiler Construction (M.INFO.B.24.WS25)  
 **Date:** January 2026
 
 ---
@@ -183,9 +183,9 @@ Cool.Interpreter.Tests/
 
 ## Contributors
 
-- **Michael Füby** - Architecture, Semantic Analysis, Testing
-- **Armin Zimmerling** - Runtime Execution, Built-in Classes, Object Model
-- **Mahmoud Ibrahim** - Parsing, AST Construction, Diagnostics
+- **Michael Füby**
+- **Armin Zimmerling**
+- **Mahmoud Ibrahim** 
 
 ---
 
@@ -200,7 +200,7 @@ Cool.Interpreter.Tests/
 **Next:** Start with [./docs/01-ARCHITECTURE.md](01-ARCHITECTURE.md) for a comprehensive overview of the system architecture.
 
 
-## Concept draft
+## First Concept draft
 ```mermaid
 
 flowchart TD
