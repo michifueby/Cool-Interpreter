@@ -8,10 +8,10 @@
 
 namespace Cool.Interpreter.Lib.Language.Analysis;
 
-using Cool.Interpreter.Lib.Core.Diagnostics;
-using Cool.Interpreter.Lib.Core.Syntax.Ast;
-using Cool.Interpreter.Lib.Language.Analysis.Checker;
-using Cool.Interpreter.Lib.Language.Symbols;
+using Core.Diagnostics;
+using Core.Syntax.Ast;
+using Checker;
+using Symbols;
 
 /// <summary>
 /// Performs full semantic analysis on a Cool program according to the official specification.

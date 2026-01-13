@@ -8,8 +8,8 @@
 
 namespace Cool.Interpreter.Lib.Language.Parsing;
 
-using Cool.Interpreter.Lib.Core.Diagnostics;
-using Cool.Interpreter.Lib.Core.Syntax.Ast;
+using Core.Diagnostics;
+using Core.Syntax.Ast;
 
 /// <summary>
 /// Represents the result of parsing Cool source code.

@@ -6,9 +6,9 @@
 // <summary>CoolRuntimeException</summary>
 //-----------------------------------------------------------------------
 
-namespace Cool.Interpreter.Lib.Core.Exeptions;
+namespace Cool.Interpreter.Lib.Core.Exceptions;
 
-using Cool.Interpreter.Lib.Core.Syntax;
+using Syntax;
 
 /// <summary>
 /// Represents a runtime exception that occurs during the interpretation of Cool programs.

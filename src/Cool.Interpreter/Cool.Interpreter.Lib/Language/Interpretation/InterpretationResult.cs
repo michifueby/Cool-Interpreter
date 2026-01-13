@@ -8,9 +8,8 @@
 
 namespace Cool.Interpreter.Lib.Language.Interpretation;
 
-using Cool.Interpreter.Lib.Language.Classes;
 using System.Collections.Immutable;
-using Cool.Interpreter.Lib.Core.Diagnostics;
+using Core.Diagnostics;
 
 /// <summary>
 /// Represents the complete result of executing a Cool program via <see cref="CoolInterpreter"/>.
@@ -98,14 +97,14 @@ public sealed class InterpretationResult
     {
         if (!IsSuccess || HasErrors)
         {
-            int errorCount = Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Error);
+            var errorCount = Diagnostics.Count(d => d.Severity == DiagnosticSeverity.Error);
             return errorCount == 1
                 ? "Execution failed with 1 error."
                 : $"Execution failed with {errorCount} errors.";
         }
 
-        bool hasOutput = !string.IsNullOrWhiteSpace(Output);
-        bool hasValue  = !string.IsNullOrEmpty(ReturnedValue);
+        var hasOutput = !string.IsNullOrWhiteSpace(Output);
+        var hasValue  = !string.IsNullOrEmpty(ReturnedValue);
 
         if (!hasOutput && !hasValue)
             return "Execution completed successfully (no output).";
@@ -113,9 +112,8 @@ public sealed class InterpretationResult
         if (!hasValue)
             return $"Execution completed.\nOutput:\n{Output.TrimEnd()}";
 
-        if (!hasOutput)
-            return $"Execution completed → {ReturnedValue}";
-
-        return $"Execution completed → {ReturnedValue}\nOutput:\n{Output.TrimEnd()}";
+        return !hasOutput 
+            ? $"Execution completed → {ReturnedValue}" 
+            : $"Execution completed → {ReturnedValue}\nOutput:\n{Output.TrimEnd()}";
     }
 }

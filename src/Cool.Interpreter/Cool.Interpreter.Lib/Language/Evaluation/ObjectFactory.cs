@@ -8,8 +8,8 @@
 
 namespace Cool.Interpreter.Lib.Language.Evaluation;
 
-using Cool.Interpreter.Lib.Language.Classes;
-using Cool.Interpreter.Lib.Language.Classes.BuiltIn;
+using Classes;
+using Classes.BuiltIn;
 
 /// <summary>
 /// Provides functionality for creating instances of CoolObject based on the class definition
@@ -43,14 +43,23 @@ public static class ObjectFactory
     /// <returns>A fully initialized instance of CoolUserObject, adhering to the specified class definition.</returns>
     private static CoolUserObject CreateUserObject(CoolClass @class, CoolRuntimeEnvironment env)
     {
-        if (env.StackDepth > CoolRuntimeEnvironment.MaxStackDepth)
+        if (env.StackDepth >= CoolRuntimeEnvironment.MaxStackDepth)
         {
-            throw new Cool.Interpreter.Lib.Core.Exeptions.CoolRuntimeException(
+            throw new Core.Exceptions.CoolRuntimeException(
                 "Stack overflow: maximum recursion depth exceeded.", 
-                Cool.Interpreter.Lib.Core.Syntax.SourcePosition.None);
+                Core.Syntax.SourcePosition.None);
         }
 
-        var nextEnv = env.WithStackDepth(env.StackDepth + 1);
+        // Check for circular initialization - prevent creating an object of a class that's currently being initialized
+        if (env.ClassesBeingInitialized.Contains(@class.Name))
+        {
+            throw new Core.Exceptions.CoolRuntimeException(
+                $"Circular initialization dependency detected: class '{@class.Name}' cannot create an instance of itself during attribute initialization.", 
+                Core.Syntax.SourcePosition.None);
+        }
+
+        var nextEnv = env.WithStackDepth(env.StackDepth + 1)
+                         .WithClassBeingInitialized(@class.Name);
         var obj = new CoolUserObject(@class, nextEnv);
         obj.Initialize(nextEnv);
         return obj;

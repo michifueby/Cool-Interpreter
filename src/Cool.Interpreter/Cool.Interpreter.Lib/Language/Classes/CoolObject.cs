@@ -8,8 +8,8 @@
 
 namespace Cool.Interpreter.Lib.Language.Classes;
 
-using Cool.Interpreter.Lib.Core.Exeptions;
-using Cool.Interpreter.Lib.Language.Classes.BuiltIn;
+using Core.Exceptions;
+using BuiltIn;
 
 /// <summary>
 /// Base class for all Cool runtime values. In Cool, *everything is an object* —

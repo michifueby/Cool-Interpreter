@@ -10,12 +10,11 @@ namespace Cool.Interpreter.Lib.Language.Parsing;
 
 using System.Collections.Immutable;
 using Antlr4.Runtime;
-using Cool.Interpreter.Lib.Core.Diagnostics;
-using Cool.Interpreter.Lib.Core.Syntax;
-using Cool.Interpreter.Lib.Core.Syntax.Ast;
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Expressions;
-using Cool.Interpreter.Lib.Core.Syntax.Ast.Features;
-using Cool.Interpreter.Lib.Core.Syntax.Operators;
+using Core.Syntax;
+using Core.Syntax.Ast;
+using Core.Syntax.Ast.Expressions;
+using Core.Syntax.Ast.Features;
+using Core.Syntax.Operators;
 
 /// <summary>
 /// Converts the raw ANTLR parse tree into our clean, hand-written, type-safe AST.
@@ -62,7 +61,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
         var nameToken = context.TYPE(0);
         var name = nameToken.GetText();
 
-        string? inheritsFrom = context.INHERITS() is not null
+        var inheritsFrom = context.INHERITS() is not null
             ? context.TYPE(1).GetText()
             : null;
 
@@ -90,6 +89,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// Visits a node in the COOL abstract syntax tree and processes it to produce the corresponding object representation.
     /// </summary>
     /// <param name="context">The parser context representing the current node in the syntax tree.</param>
+    /// <param name="sourceOrder">The order of the feature within its containing class, used for attributes.</param>
     /// <returns>An object that represents the processed result of the visited node, or null if no specific processing is applied.</returns>
     private object? Visit(CoolParser.FeatureContext context, int sourceOrder)
         => context.method() is { } m
@@ -103,7 +103,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// </summary>
     /// <param name="context">The parser context representing the method node in the syntax tree.</param>
     /// <returns>A <see cref="MethodNode"/> containing an immutable representation of the method's components.</returns>
-    public override object? VisitMethod(CoolParser.MethodContext context)
+    public override object VisitMethod(CoolParser.MethodContext context)
     {
         var id = context.ID().GetText();
         var returnType = context.TYPE().GetText();
@@ -125,7 +125,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// </summary>
     /// <param name="context">The parser context representing the formal node in the syntax tree.</param>
     /// <returns>A <see cref="FormalNode"/> containing the identifier and type information of the formal.</returns>
-    public override object? VisitFormal(CoolParser.FormalContext context)
+    public override object VisitFormal(CoolParser.FormalContext context)
     {
         var name = context.ID().GetText();
         var typeName = context.TYPE().GetText();
@@ -139,7 +139,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// <param name="context">The parser context representing the explicit dispatch node in the syntax tree.</param>
     /// <returns>A <see cref="DispatchNode"/> containing the caller expression, optional static type, method name,
     /// method arguments, and source position information.</returns>
-    public override object? VisitDispatchExplicit(CoolParser.DispatchExplicitContext context)
+    public override object VisitDispatchExplicit(CoolParser.DispatchExplicitContext context)
     {
         var caller = Visit(context.expression(0)) as ExpressionNode;
         var staticType = context.TYPE()?.GetText();
@@ -149,7 +149,9 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
             .Select(e => Visit(e) as ExpressionNode!)
             .ToImmutableArray();
 
-        return new DispatchNode(caller, staticType, method, args, ToSourcePosition(context.Start));
+        return new DispatchNode(
+            caller ?? throw new InvalidOperationException("Caller expression cannot be null"),
+            staticType, method, args, ToSourcePosition(context.Start));
     }
 
     /// <summary>
@@ -159,7 +161,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// <param name="context">The parser context representing the implicit dispatch node in the syntax tree.</param>
     /// <returns>A <see cref="DispatchNode"/> containing the details of the method being called, the arguments passed,
     /// and the source position of the call.</returns>
-    public override object? VisitDispatchImplicit(CoolParser.DispatchImplicitContext context)
+    public override object VisitDispatchImplicit(CoolParser.DispatchImplicitContext context)
     {
         var method = context.ID().GetText();
         var args = context.expression()
@@ -177,12 +179,15 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// <param name="context">The parser context for the 'if' expression, containing the predicate,
     /// 'then' branch, and optional 'else' branch.</param>
     /// <returns>An <see cref="IfNode"/> representing the conditional branching expression in the syntax tree.</returns>
-    public override object? VisitIf(CoolParser.IfContext context)
+    public override object VisitIf(CoolParser.IfContext context)
     {
         var pred = Visit(context.expression(0)) as ExpressionNode;
         var thenExpr = Visit(context.expression(1)) as ExpressionNode;
         var elseExpr = Visit(context.expression(2)) as ExpressionNode;
-        return new IfNode(pred!, thenExpr, elseExpr, ToSourcePosition(context.Start));
+        return new IfNode(pred!, 
+            thenExpr ?? throw new InvalidOperationException("Then expression cannot be null"),
+            elseExpr ?? throw new InvalidOperationException("Else expression cannot be null"),
+            ToSourcePosition(context.Start));
     }
 
     /// <summary>
@@ -191,11 +196,14 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// </summary>
     /// <param name="context">The parser context representing the 'while' loop node in the syntax tree.</param>
     /// <returns>A <see cref="WhileNode"/> containing the predicate and body expressions of the 'while' loop.</returns>
-    public override object? VisitWhile(CoolParser.WhileContext context)
+    public override object VisitWhile(CoolParser.WhileContext context)
     {
         var pred = Visit(context.expression(0)) as ExpressionNode;
         var body = Visit(context.expression(1)) as ExpressionNode;
-        return new WhileNode(pred, body, ToSourcePosition(context.Start));
+        return new WhileNode(
+            pred ?? throw new InvalidOperationException("Predicate expression cannot be null"),
+            body ?? throw new InvalidOperationException("Body expression cannot be null"),
+            ToSourcePosition(context.Start));
     }
 
     /// <summary>
@@ -204,14 +212,14 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// </summary>
     /// <param name="context">The parser context representing the block node in the syntax tree.</param>
     /// <returns>A <see cref="BlockNode"/> containing an immutable collection of all expression nodes in the block.</returns>
-    public override object? VisitBlock(CoolParser.BlockContext context)
+    public override object VisitBlock(CoolParser.BlockContext context)
     {
-        var exprs = context.expression()
+        var expr = context.expression()
             .Select(Visit)
             .Cast<ExpressionNode>()
             .ToImmutableArray();
 
-        return new BlockNode(exprs, ToSourcePosition(context.Start));
+        return new BlockNode(expr, ToSourcePosition(context.Start));
     }
 
     /// <summary>
@@ -221,7 +229,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// <param name="context">The parser context representing the case expression in the syntax tree.</param>
     /// <returns>A <see cref="CaseNode"/> representing the case expression, which includes the scrutinee,
     /// the collection of case branches, and their source positions.</returns>
-    public override object? VisitCase(CoolParser.CaseContext context)
+    public override object VisitCase(CoolParser.CaseContext context)
     {
         var scrutineeExpr = context.expression(0);
         var scrutinee = Visit(scrutineeExpr) as ExpressionNode;
@@ -240,7 +248,8 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
             .ToImmutableArray();
 
         var location = ToSourcePosition(context.CASE().Symbol);
-        return new CaseNode(scrutinee, branches, location);
+        return new CaseNode(scrutinee ?? throw new InvalidOperationException("Scrutinee expression cannot be null"),
+            branches, location);
     }
 
     /// <summary>
@@ -249,7 +258,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// </summary>
     /// <param name="context">The parser context representing the "new" expression in the abstract syntax tree.</param>
     /// <returns>A <see cref="NewNode"/> describing the instantiation of the specified type, including its source position.</returns>
-    public override object? VisitNew(CoolParser.NewContext context)
+    public override object VisitNew(CoolParser.NewContext context)
         => new NewNode(context.TYPE().GetText(), ToSourcePosition(context.Start));
 
     /// <summary>
@@ -258,7 +267,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// </summary>
     /// <param name="context">The parser context for the negative expression node.</param>
     /// <returns>A <see cref="UnaryOperationNode"/> encapsulating the negation operator and the operand expression node.</returns>
-    public override object? VisitNegative(CoolParser.NegativeContext context)
+    public override object VisitNegative(CoolParser.NegativeContext context)
         => new UnaryOperationNode(UnaryOperator.Negate,
             (Visit(context.expression()) as ExpressionNode)!, ToSourcePosition(context.Start));
 
@@ -269,7 +278,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// <param name="context">The parser context that encapsulates the isvoid expression in the syntax tree.</param>
     /// <returns>An <see cref="IsVoidNode"/> representing the isvoid expression,
     /// containing its child expression and source position.</returns>
-    public override object? VisitIsvoid(CoolParser.IsvoidContext context)
+    public override object VisitIsvoid(CoolParser.IsvoidContext context)
         => new IsVoidNode((Visit(context.expression()) as ExpressionNode)!, ToSourcePosition(context.Start));
 
     /// <summary>
@@ -280,12 +289,12 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// <returns>A <see cref="BinaryOperationNode"/> containing the left and right operands, the binary operator,
     /// and source position data for the arithmetic expression.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the arithmetic operator is unrecognized or unsupported.</exception>
-    public override object? VisitArithmetic(CoolParser.ArithmeticContext context)
+    public override object VisitArithmetic(CoolParser.ArithmeticContext context)
     {
         var left = Visit(context.expression(0)) as ExpressionNode;
         var right = Visit(context.expression(1)) as ExpressionNode;
 
-        BinaryOperator op = context.op.Text switch
+        var op = context.op.Text switch
         {
             "+" =>  BinaryOperator.Plus,       // '+'
             
@@ -298,7 +307,11 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
             _ => throw new InvalidOperationException($"Unknown arithmetic operator {context.op.Text}")
         };
 
-        return new BinaryOperationNode(left, op, right, ToSourcePosition(context.op));
+        return new BinaryOperationNode(
+            left ?? throw new InvalidOperationException("Left expression cannot be null"),
+            op, 
+            right ?? throw new InvalidOperationException("Right expression cannot be null"),
+            ToSourcePosition(context.op));
     }
 
     /// <summary>
@@ -311,7 +324,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// <exception cref="InvalidOperationException">
     /// Thrown if the comparison operator is not recognized.
     /// </exception>
-    public override object? VisitComparisson(CoolParser.ComparissonContext context)
+    public override object VisitComparisson(CoolParser.ComparissonContext context)
     {
         var left = Visit(context.expression(0)) as ExpressionNode;
         var right = Visit(context.expression(1)) as ExpressionNode;
@@ -327,7 +340,11 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
             _ => throw new InvalidOperationException($"Unknown comparison operator {context.op.Text}")
         };
 
-        return new BinaryOperationNode(left, op, right, ToSourcePosition(context.op));
+        return new BinaryOperationNode(
+            left ?? throw new InvalidOperationException("Left expression cannot be null"),
+            op, 
+            right ?? throw new InvalidOperationException("Right expression cannot be null"),
+            ToSourcePosition(context.op));
     }
 
     /// <summary>
@@ -337,9 +354,11 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// <param name="context">The parser context representing the "not" expression in the syntax tree.</param>
     /// <returns>A <see cref="UnaryOperationNode"/> representing the logical negation,
     /// containing the operand and its source position.</returns>
-    public override object? VisitBoolNot(CoolParser.BoolNotContext context)
+    public override object VisitBoolNot(CoolParser.BoolNotContext context)
         => new UnaryOperationNode(UnaryOperator.Not,
-            Visit(context.expression()) as ExpressionNode, ToSourcePosition(context.Start));
+            Visit(
+                context.expression()) as ExpressionNode ?? throw new InvalidOperationException("Expression cannot be null"),
+            ToSourcePosition(context.Start));
 
     /// <summary>
     /// Visits an assignment node in the COOL abstract syntax tree and generates
@@ -348,9 +367,10 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// </summary>
     /// <param name="context">The parser context representing the assignment node in the syntax tree.</param>
     /// <returns>An <see cref="AssignNode"/> representing an assignment operation in the syntax tree.</returns>
-    public override object? VisitAssignment(CoolParser.AssignmentContext context)
+    public override object VisitAssignment(CoolParser.AssignmentContext context)
         => new AssignNode(context.ID().GetText(),
-            Visit(context.expression()) as ExpressionNode, ToSourcePosition(context.Start));
+            Visit(context.expression()) as ExpressionNode ?? throw new InvalidOperationException("Expression cannot be null"),
+    ToSourcePosition(context.Start));
 
     /// <summary>
     /// Visits a let-in expression node in the COOL abstract syntax tree, constructing a <see cref="LetNode"/>
@@ -358,14 +378,16 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// </summary>
     /// <param name="context">The parser context representing the let-in expression node in the syntax tree.</param>
     /// <returns>A <see cref="LetNode"/> containing an immutable collection of variable bindings and the body of the let-in expression.</returns>
-    public override object? VisitLetIn(CoolParser.LetInContext context)
+    public override object VisitLetIn(CoolParser.LetInContext context)
     {
         var bindings = context.property()
             .Select(VisitPropertyAsLetBinding)
             .ToImmutableArray();
 
         var body = Visit(context.expression()) as ExpressionNode;
-        return new LetNode(bindings, body, ToSourcePosition(context.Start));
+        return new LetNode(bindings,
+            body ?? throw new InvalidOperationException("Body cannot be null"),
+            ToSourcePosition(context.Start));
     }
 
     /// <summary>
@@ -379,7 +401,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
         var name = formal.ID().GetText();
         var typeName = formal.TYPE().GetText();
 
-        ExpressionNode? initializer = context.ASSIGNMENT() is not null
+        var initializer = context.ASSIGNMENT() is not null
             ? Visit(context.expression()) as ExpressionNode
             : null;
 
@@ -413,7 +435,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// <param name="context">The parser context containing the integer literal token.</param>
     /// <returns>An <see cref="IntegerLiteralNode"/> representing the integer value
     /// along with its source position in the syntax tree.</returns>
-    public override object? VisitInt(CoolParser.IntContext context)
+    public override object VisitInt(CoolParser.IntContext context)
         => new IntegerLiteralNode(int.Parse(context.INT().GetText()), ToSourcePosition(context.Start));
 
     /// <summary>
@@ -422,7 +444,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// </summary>
     /// <param name="context">The parser context for the string literal node in the syntax tree.</param>
     /// <returns>A <see cref="StringLiteralNode"/> containing the unescaped string value and its source position.</returns>
-    public override object? VisitString(CoolParser.StringContext context)
+    public override object VisitString(CoolParser.StringContext context)
         => new StringLiteralNode(UnescapeString(context.STRING().GetText()), ToSourcePosition(context.Start));
 
     /// <summary>
@@ -431,7 +453,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// </summary>
     /// <param name="context">The parser context representing the boolean literal in the syntax tree.</param>
     /// <returns>A <see cref="BoolLiteralNode"/> representing the boolean value and its source location.</returns>
-    public override object? VisitBoolean(CoolParser.BooleanContext context)
+    public override object VisitBoolean(CoolParser.BooleanContext context)
         => new BoolLiteralNode(context.TRUE() != null, ToSourcePosition(context.Start));
     
     /// <summary>
@@ -442,13 +464,13 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
     /// <param name="context">The property context node in the syntax tree that represents an attribute declaration.</param>
     /// <param name="sourceOrder">The order of the attribute within the scope of its containing class or feature.</param>
     /// <returns>An <see cref="AttributeNode"/> representing the attribute with its name, type, optional initializer, order, and location in source code.</returns>
-    private object? Visit(CoolParser.PropertyContext context, int sourceOrder)
+    private AttributeNode Visit(CoolParser.PropertyContext context, int sourceOrder)
     {
         var formal = context.formal();
         var name = formal.ID().GetText();
         var typeName = formal.TYPE().GetText();
 
-        ExpressionNode? initializer = context.ASSIGNMENT() is not null
+        var initializer = context.ASSIGNMENT() is not null
             ? Visit(context.expression()) as ExpressionNode
             : null;
 
@@ -476,7 +498,7 @@ public class AstBuilderVisitor : CoolBaseVisitor<object?>
         var s = raw.Substring(1, raw.Length - 2);
         var sb = new System.Text.StringBuilder(s.Length);
 
-        for (int i = 0; i < s.Length; i++)
+        for (var i = 0; i < s.Length; i++)
         {
             if (s[i] == '\\')
             {

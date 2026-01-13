@@ -8,6 +8,8 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+// Generated from C:/Users/admin/RiderProjects/Cool-Interpreter/src/Cool.Interpreter/Cool.Interpreter.Lib/Antlr4/Grammars/Cool.g4 by ANTLR 4.13.1
+
 // Unreachable code detected
 #pragma warning disable 0162
 // The variable '...' is assigned but its value is never used
