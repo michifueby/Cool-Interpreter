@@ -125,7 +125,7 @@ let, in, case, of, esac, new, isvoid, not
 ### Lexer Implementation
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff'}}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'textColor': '#ffffff', 'lineColor': '#ffffff'}}}%%
 
 flowchart LR
     Source[Source Code] --> Lexer[ANTLR4 Lexer]
