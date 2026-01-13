@@ -3,7 +3,7 @@
 ## Project Report
 **Authors:** Michael Füby, Armin Zimmerling, Mahmoud Ibrahim  
 **Institution:** FH Wiener Neustadt  
-**Course:** Compiler Construction (M.INFO.B.24.WS25 COM 68598)  
+**Course:** Compiler Construction (M.INFO.B.24.WS25)  
 **Date:** January 2026
 
 ---
