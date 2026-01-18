@@ -1,12 +1,16 @@
+(* Roman Numeral Converter *)
+(* Converts decimal numbers to Roman numerals *)
+
 class Main inherits IO {
     main(): Int {{
         let converter: RomanConverter <- new RomanConverter in
-        converter.convert(2026);
+        converter.convert(2026);  -- Example: convert 2026 to MMXXVI
         0;
     }};
 };
 
 class RomanConverter inherits IO {
+    (* Converts and prints a number in Roman numeral format *)
     convert(n: Int): Object {{
         out_int(n);
         out_string(" in Roman: ");
@@ -14,6 +18,8 @@ class RomanConverter inherits IO {
         out_string("\n");
     }};
 
+    (* Converts an integer to Roman numeral string *)
+    (* Uses greedy algorithm: subtract largest values first *)
     to_roman(num: Int): String {
         let result: String <- "",
             n: Int <- num in {
@@ -46,11 +52,13 @@ class RomanConverter inherits IO {
         }
     };
 
+    (* Recursively adds Roman numerals to the result string *)
+    (* Repeats the symbol while value fits into remaining number *)
     add_roman(current: String, n: Int, value: Int, roman: String): String {
-        if value < n + 1 then
-            add_roman(current.concat(roman), n - value, value, roman)
+        if value < n + 1 then  -- If value fits into n
+            add_roman(current.concat(roman), n - value, value, roman)  -- Add symbol and recurse
         else
-            current
+            current  -- Return accumulated result
         fi
     };
 };
